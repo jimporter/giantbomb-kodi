@@ -13,6 +13,9 @@ API_KEY = 'fa96542d69b4af7f31c2049ace5d89e84e225bef' # Default API key
 addon_id = int(sys.argv[1])
 my_addon = xbmcaddon.Addon('plugin.video.giantbomb2')
 
+def dump(s):
+    print '[GB2] ' + s
+
 def query_api(resource, query=None, format='json'):
     """Query the Giant Bomb API."""
     full_query = { 'api_key': API_KEY, 'format': format }
@@ -53,15 +56,15 @@ def list_videos(video_type):
             remote_url = video['high_url']
             url = build_url({'mode': 'play', 'url': remote_url})
             date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
+            duration = video['length_seconds']
 
-            li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png')
-            if not first_li:
-                first_li = li
-                thumb = video['image']['super_url']
-            li.setInfo(type='Video', infoLabels={
-                    'Title': name,
-                    'Plot': video['deck'],
-                    'Date': time.strftime('%d.%m.%Y', date),
+            li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
+                                  thumbnailImage=video['image']['super_url'])
+            li.addStreamInfo('video', { 'duration': duration })
+            li.setInfo('video', infoLabels={
+                    'title': name,
+                    'plot': video['deck'],
+                    'date': time.strftime('%d.%m.%Y', date),
                     })
             li.setProperty('IsPlayable', 'true')
             xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
