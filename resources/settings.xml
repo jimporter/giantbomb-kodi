@@ -7,6 +7,6 @@
     <setting id="quality" type="enum" values="Auto|Low|High" default="0"
              label="Quality" />
     <setting type="action"
-             action="RunScript(plugin.video.giantbomb2, 0, mode=link&amp;from_settings=true)"
+             action="RunScript(plugin.video.giantbombex, 0, mode=link&amp;from_settings=true)"
              label="Link Account" />
 </settings>

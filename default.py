@@ -12,7 +12,7 @@ API_PATH = 'http://api.giantbomb.com'
 DEFAULT_API_KEY = 'fa96542d69b4af7f31c2049ace5d89e84e225bef'
 API_KEY = DEFAULT_API_KEY
 addon_id = int(sys.argv[1])
-my_addon = xbmcaddon.Addon('plugin.video.giantbomb2')
+my_addon = xbmcaddon.Addon('plugin.video.giantbombex')
 
 def dump(s):
     print '[GB2] ' + str(s)
