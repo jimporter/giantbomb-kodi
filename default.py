@@ -44,7 +44,6 @@ class Plugin(object):
         self.handler(fn)
 
     def run(self, arguments):
-        dump(arguments)
         params = dict(urlparse.parse_qsl( re.sub(r'^\?', '', arguments) ))
         mode = params.get('mode')
         if mode is None:
@@ -55,47 +54,44 @@ class Plugin(object):
 plugin = Plugin()
 
 @plugin.default_handler
-def list_categories(**kwargs):
+def categories(**kwargs):
     data = query_api('video_types')
-    total = data['number_of_total_results']
+    total = data['number_of_total_results'] + 1 # Add one for "Search"
     for category in data['results']:
         name = category['name']
-        mode = 'list_endurance' if category['id'] == 5 else 'list_videos'
+        mode = 'endurance' if category['id'] == 5 else 'videos'
         url = build_url({ 'mode': mode, 'video_type': category['id'] })
         li = xbmcgui.ListItem(category['name'], iconImage='DefaultFolder.png')
 
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True,
                                     totalItems=total)
+
+    url = build_url({ 'mode': 'search' })
+    li = xbmcgui.ListItem('Search', iconImage='DefaultFolder.png')
+    xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
+                                listitem=li, isFolder=True,
+                                totalItems=total)
     xbmcplugin.endOfDirectory(addon_id)
 
-@plugin.handler
-def list_videos(video_type, page='0', gb_filter=None, **kwargs):
+def list_videos(data, page, extraargs):
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_DATE)
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_TITLE)
 
-    page = int(page)
-    offset = page * 100
-    params = { 'video_type': video_type, 'offset': offset }
-    if gb_filter:
-        params['filter'] = gb_filter
-    data = query_api('videos', params)
     total = data['number_of_total_results']
 
     menu = []
-    if offset != 0:
-        url = build_url({ 'mode': 'list_videos', 'video_type': video_type,
-                          'page': page - 1, 'gb_filter': gb_filter })
+    if page != 0:
+        url = build_url({ 'page': page-1 }.extend(extraargs))
         menu.append(('Previous page', 'Container.Update(' + url + ', replace)'))
-    if offset + 100 < total:
-        url = build_url({ 'mode': 'list_videos', 'video_type': video_type,
-                          'page': page + 1, 'gb_filter': gb_filter })
+    if (page+1) * 100 < total:
+        url = build_url({ 'page': page+1 }.extend(extraargs))
         menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
 
     for video in data['results']:
         name = video['name']
         remote_url = video['high_url']
-        url = build_url({'mode': 'play_video', 'url': remote_url})
+        url = build_url({ 'mode': 'play', 'url': remote_url })
         date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
         duration = video['length_seconds']
 
@@ -115,12 +111,23 @@ def list_videos(video_type, page='0', gb_filter=None, **kwargs):
     xbmcplugin.endOfDirectory(addon_id)
 
 @plugin.handler
-def list_endurance(**kwargs):
+def videos(video_type, page='0', gb_filter=None, **kwargs):
+    page = int(page)
+    api_params = { 'video_type': video_type, 'offset': page*100 }
+    plugin_params = { 'mode': 'videos', 'video_type': video_type }
+    if gb_filter:
+        api_params['filter'] = gb_filter
+        plugin_params['gb_filter'] = gb_filter
+    data = query_api('videos', api_params)
+    list_videos(data, page, plugin_params)
+
+@plugin.handler
+def endurance(**kwargs):
     runs = [ 'Chrono Trigger', 'Deadly Premonition', 'Persona 4',
              'The Matrix Online' ]
 
     for run in runs:
-        url = build_url({ 'mode': 'list_videos', 'video_type': '5',
+        url = build_url({ 'mode': 'videos', 'video_type': '5',
                           'gb_filter': 'name:' + run })
         li = xbmcgui.ListItem(run, iconImage='DefaultFolder.png')
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
@@ -128,7 +135,23 @@ def list_endurance(**kwargs):
     xbmcplugin.endOfDirectory(addon_id)
 
 @plugin.handler
-def play_video(url, **kwargs):
+def search(query=None, page='0', **kwargs):
+    page = int(page)
+
+    if query is None:
+        keyboard = xbmc.Keyboard('', 'Search', False)
+        keyboard.doModal()
+        if keyboard.isConfirmed():
+            query = keyboard.getText()
+        else:
+            return categories() # XXX: Find a "go back" command?
+
+    data = query_api('search', { 'resources': 'video', 'query': query,
+                                 'offset': page*100})
+    list_videos(data, page, { 'mode': 'search', 'query': query })
+
+@plugin.handler
+def play(url, **kwargs):
     li = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_id, True, li)
 
