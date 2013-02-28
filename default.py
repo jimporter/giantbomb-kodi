@@ -144,7 +144,8 @@ def search(query=None, page='0', **kwargs):
         if keyboard.isConfirmed():
             query = keyboard.getText()
         else:
-            return categories() # XXX: Find a "go back" command?
+            xbmc.executebuiltin('Action(ParentDir)')
+            return
 
     data = query_api('search', { 'resources': 'video', 'query': query,
                                  'offset': page*100})
