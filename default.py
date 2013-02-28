@@ -27,14 +27,41 @@ def query_api(resource, query=None, format='json'):
 
 def build_url(query):
     """Build a URL to refer back to this add-on."""
-    return sys.argv[0] + "?" + urllib.urlencode(query)
+    return sys.argv[0] + '?' + urllib.urlencode(query)
 
-def list_categories():
+class Plugin(object):
+    """A simple handler for requests against this plugin. To register handlers,
+    use the handler and default_handler decorators."""
+    def __init__(self):
+        self._mode_mapping = {}
+        self._default_mode_mapping = None
+
+    def handler(self, fn):
+        self._mode_mapping[fn.__name__] = fn
+
+    def default_handler(self, fn):
+        self._default_mode_mapping = fn
+        self.handler(fn)
+
+    def run(self, arguments):
+        dump(arguments)
+        params = dict(urlparse.parse_qsl( re.sub(r'^\?', '', arguments) ))
+        mode = params.get('mode')
+        if mode is None:
+            self._default_mode_mapping(**params)
+        elif mode in self._mode_mapping:
+            self._mode_mapping[mode](**params)
+
+plugin = Plugin()
+
+@plugin.default_handler
+def list_categories(**kwargs):
     data = query_api('video_types')
     total = data['number_of_total_results']
     for category in data['results']:
         name = category['name']
-        url = build_url({ 'mode': 'list_videos', 'video_type': category['id'] })
+        mode = 'list_endurance' if category['id'] == 5 else 'list_videos'
+        url = build_url({ 'mode': mode, 'video_type': category['id'] })
         li = xbmcgui.ListItem(category['name'], iconImage='DefaultFolder.png')
 
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
@@ -42,23 +69,27 @@ def list_categories():
                                     totalItems=total)
     xbmcplugin.endOfDirectory(addon_id)
 
-def list_videos(video_type, page):
+@plugin.handler
+def list_videos(video_type, page='0', gb_filter=None, **kwargs):
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_DATE)
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_TITLE)
 
+    page = int(page)
     offset = page * 100
-    data = query_api('videos', { 'video_type': video_type,
-                                 'offset': offset })
+    params = { 'video_type': video_type, 'offset': offset }
+    if gb_filter:
+        params['filter'] = gb_filter
+    data = query_api('videos', params)
     total = data['number_of_total_results']
 
     menu = []
     if offset != 0:
         url = build_url({ 'mode': 'list_videos', 'video_type': video_type,
-                          'page': page - 1 })
+                          'page': page - 1, 'gb_filter': gb_filter })
         menu.append(('Previous page', 'Container.Update(' + url + ', replace)'))
     if offset + 100 < total:
         url = build_url({ 'mode': 'list_videos', 'video_type': video_type,
-                          'page': page + 1 })
+                          'page': page + 1, 'gb_filter': gb_filter })
         menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
 
     for video in data['results']:
@@ -83,18 +114,26 @@ def list_videos(video_type, page):
 
     xbmcplugin.endOfDirectory(addon_id)
 
-def play_video(url):
+@plugin.handler
+def list_endurance(**kwargs):
+    runs = [ 'Chrono Trigger', 'Deadly Premonition', 'Persona 4',
+             'The Matrix Online' ]
+
+    for run in runs:
+        url = build_url({ 'mode': 'list_videos', 'video_type': '5',
+                          'gb_filter': 'name:' + run })
+        li = xbmcgui.ListItem(run, iconImage='DefaultFolder.png')
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
+                                    listitem=li, isFolder=True)
+    xbmcplugin.endOfDirectory(addon_id)
+
+@plugin.handler
+def play_video(url, **kwargs):
     li = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_id, True, li)
 
-params = dict(urlparse.parse_qsl( re.sub(r'^\?', '', sys.argv[2]) ))
-mode = params.get('mode')
+
 xbmcplugin.setContent(addon_id, 'movies')
 xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
 
-if mode is None:
-    list_categories()
-elif mode == 'list_videos':
-    list_videos(params['video_type'], int(params.get('page', 0)))
-elif mode == 'play_video':
-    play_video(params['url'])
+plugin.run(sys.argv[2])
