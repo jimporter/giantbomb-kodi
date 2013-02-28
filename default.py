@@ -14,7 +14,7 @@ addon_id = int(sys.argv[1])
 my_addon = xbmcaddon.Addon('plugin.video.giantbomb2')
 
 def dump(s):
-    print '[GB2] ' + s
+    print '[GB2] ' + str(s)
 
 def query_api(resource, query=None, format='json'):
     """Query the Giant Bomb API."""
@@ -34,58 +34,67 @@ def list_categories():
     total = data['number_of_total_results']
     for category in data['results']:
         name = category['name']
-        url = build_url({ 'mode': 'video_type', 'id': category['id'] })
-        li = xbmcgui.ListItem(name, iconImage='DefaultFolder.png')
+        url = build_url({ 'mode': 'list_videos', 'video_type': category['id'] })
+        li = xbmcgui.ListItem(category['name'], iconImage='DefaultFolder.png')
+
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True,
                                     totalItems=total)
     xbmcplugin.endOfDirectory(addon_id)
 
-def list_videos(video_type):
+def list_videos(video_type, page):
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_DATE)
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_TITLE)
 
-    offset = 0
-    while True:
-        data = query_api('videos', { 'video_type': video_type,
-                                     'offset': offset })
-        total = data['number_of_total_results']
-        offset += data['limit']
-        for video in data['results']:
-            name = video['name']
-            remote_url = video['high_url']
-            url = build_url({'mode': 'play', 'url': remote_url})
-            date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
-            duration = video['length_seconds']
+    offset = page * 100
+    data = query_api('videos', { 'video_type': video_type,
+                                 'offset': offset })
+    total = data['number_of_total_results']
 
-            li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
-                                  thumbnailImage=video['image']['super_url'])
-            li.addStreamInfo('video', { 'duration': duration })
-            li.setInfo('video', infoLabels={
-                    'title': name,
-                    'plot': video['deck'],
-                    'date': time.strftime('%d.%m.%Y', date),
-                    })
-            li.setProperty('IsPlayable', 'true')
-            xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
-                                        listitem=li, totalItems=total)
-        if offset >= total:
-            break
+    menu = []
+    if offset != 0:
+        url = build_url({ 'mode': 'list_videos', 'video_type': video_type,
+                          'page': page - 1 })
+        menu.append(('Previous page', 'Container.Update(' + url + ', replace)'))
+    if offset + 100 < total:
+        url = build_url({ 'mode': 'list_videos', 'video_type': video_type,
+                          'page': page + 1 })
+        menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
+
+    for video in data['results']:
+        name = video['name']
+        remote_url = video['high_url']
+        url = build_url({'mode': 'play_video', 'url': remote_url})
+        date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
+        duration = video['length_seconds']
+
+        li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
+                              thumbnailImage=video['image']['super_url'])
+        li.addStreamInfo('video', { 'duration': duration })
+        li.setInfo('video', infoLabels={
+                'title': name,
+                'plot': video['deck'],
+                'date': time.strftime('%d.%m.%Y', date),
+                })
+        li.setProperty('IsPlayable', 'true')
+        li.addContextMenuItems(menu)
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
+                                    listitem=li, totalItems=total)
+
     xbmcplugin.endOfDirectory(addon_id)
-
 
 def play_video(url):
     li = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_id, True, li)
 
-params = urlparse.parse_qs(re.sub(r'^\?', '', sys.argv[2]))
-mode = params.get('mode', [None])[0]
+params = dict(urlparse.parse_qsl( re.sub(r'^\?', '', sys.argv[2]) ))
+mode = params.get('mode')
+xbmcplugin.setContent(addon_id, 'movies')
+xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
 
 if mode is None:
     list_categories()
-elif mode == 'video_type':
-    list_videos(params['id'][0])
-elif mode == 'play':
-    play_video(params['url'][0])
-
-
+elif mode == 'list_videos':
+    list_videos(params['video_type'], int(params.get('page', 0)))
+elif mode == 'play_video':
+    play_video(params['url'])
