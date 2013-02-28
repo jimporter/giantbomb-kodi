@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-    <setting id="api_key" type="text" default="" option="hidden" label="API Key" visible="false" />
-    <setting id="quality" type="enum" values="Auto|Low|High" default="0" label="Quality" />
+    <setting id="first_run" type="bool" default="true" label="First Run"
+             visible="false" />
+    <setting id="api_key" type="text" default="" option="hidden" label="API Key"
+             visible="false" />
+    <setting id="quality" type="enum" values="Auto|Low|High" default="0"
+             label="Quality" />
+    <setting type="action"
+             action="RunScript(plugin.video.giantbomb2, 0, mode=link&amp;from_settings=true)"
+             label="Link Account" />
 </settings>

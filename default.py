@@ -9,7 +9,8 @@ import xbmcgui
 import time
 
 API_PATH = 'http://api.giantbomb.com'
-API_KEY = 'fa96542d69b4af7f31c2049ace5d89e84e225bef' # Default API key
+DEFAULT_API_KEY = 'fa96542d69b4af7f31c2049ace5d89e84e225bef'
+API_KEY = DEFAULT_API_KEY
 addon_id = int(sys.argv[1])
 my_addon = xbmcaddon.Addon('plugin.video.giantbomb2')
 
@@ -22,12 +23,32 @@ def query_api(resource, query=None, format='json'):
     if (query):
         full_query.update(query)
     url = API_PATH + '/' + resource + '?' + urllib.urlencode(full_query)
-    response = urllib2.urlopen(url)
-    return simplejson.loads(response.read())
+    data = simplejson.loads(urllib2.urlopen(url).read())
+
+    if data['status_code'] == 100:
+        dump('Warning! Bad API key detected. Resetting the key and retrying.')
+        global API_KEY
+        API_KEY = DEFAULT_API_KEY
+        my_addon.setSetting('api_key', '')
+        data = simplejson.loads(urllib2.urlopen(url).read())
+
+    return data
 
 def build_url(query):
     """Build a URL to refer back to this add-on."""
     return sys.argv[0] + '?' + urllib.urlencode(query)
+
+def get_api_key(link_code):
+    """Get the API key from the site given the link code."""
+    if link_code and len(link_code) == 6:
+        data = query_api('validate', { 'link_code': link_code })
+        dump(simplejson.dumps(data, indent=2))
+        if data.get('api_key'):
+            global API_KEY
+            API_KEY = data['api_key']
+            my_addon.setSetting('api_key', data['api_key'])
+            return True
+    return False
 
 class Plugin(object):
     """A simple handler for requests against this plugin. To register handlers,
@@ -38,10 +59,11 @@ class Plugin(object):
 
     def handler(self, fn):
         self._mode_mapping[fn.__name__] = fn
+        return fn
 
     def default_handler(self, fn):
         self._default_mode_mapping = fn
-        self.handler(fn)
+        return self.handler(fn)
 
     def run(self, arguments):
         params = dict(urlparse.parse_qsl( re.sub(r'^\?', '', arguments) ))
@@ -53,8 +75,45 @@ class Plugin(object):
 
 plugin = Plugin()
 
+@plugin.handler
+def link_account(from_settings=False, **kwargs):
+    dialog = xbmcgui.Dialog()
+    nolabel = 'Cancel' if from_settings else 'Skip'
+    ok = dialog.yesno("Let's do this.",
+                      'To link your account, visit',
+                      'www.giantbomb.com/xbmc to get a link code.',
+                      'Enter this code on the next screen.',
+                      yeslabel='Next', nolabel=nolabel)
+
+    while ok:
+        keyboard = xbmc.Keyboard('', 'Enter your link code', False)
+        keyboard.doModal()
+        if keyboard.isConfirmed():
+            link_code = keyboard.getText().upper()
+            if get_api_key(link_code):
+                dialog.ok('Success!', 'Your account is now linked!',
+                          'If you are a premium member,',
+                          'you should now have premium privileges.')
+                return True
+            else:
+                ok = dialog.yesno("We're really sorry, but...",
+                                  'We could not link your account.',
+                                  'Make sure the code you entered is correct',
+                                  'and try again.',
+                                  yeslabel='Try again', nolabel='Cancel')
+        else:
+            ok = False
+
+    # If we got here, we gave up trying to link the account.
+    return False
+
 @plugin.default_handler
 def categories(**kwargs):
+    if my_addon.getSetting('first_run') == 'true':
+        if not my_addon.getSetting('api_key'):
+            link_account()
+        my_addon.setSetting('first_run', 'false')
+
     data = query_api('video_types')
     total = data['number_of_total_results'] + 1 # Add one for "Search"
     for category in data['results']:
@@ -156,6 +215,9 @@ def play(url, **kwargs):
     li = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_id, True, li)
 
+if my_addon.getSetting('api_key'):
+    global API_KEY
+    API_KEY = user_api_key
 
 xbmcplugin.setContent(addon_id, 'movies')
 xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
