@@ -5,7 +5,7 @@
     <setting id="quality" type="enum" values="Auto|Low|High" default="0"
              label="Quality" />
     <setting id="api_key" type="text" default="" option="hidden" label="API Key"
-             visible="true" />
+             visible="false" />
     <setting type="action"
              action="RunScript(plugin.video.giantbombex, 0, mode=link_account)"
              label="Link Account" visible="eq(-1,)" />
