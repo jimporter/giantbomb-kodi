@@ -34,10 +34,6 @@ def query_api(resource, query=None, format='json'):
 
     return data
 
-def build_url(query):
-    """Build a URL to refer back to this add-on."""
-    return sys.argv[0] + '?' + urllib.urlencode(query)
-
 def get_api_key(link_code):
     """Get the API key from the site given the link code."""
     if link_code and len(link_code) == 6:
@@ -49,7 +45,7 @@ def get_api_key(link_code):
             return True
     return False
 
-class Plugin(object):
+class RequestHandler(object):
     """A simple handler for requests against this plugin. To register handlers,
     use the handler and default_handler decorators."""
     def __init__(self):
@@ -64,6 +60,10 @@ class Plugin(object):
         self._default_mode_mapping = fn
         return self.handler(fn)
 
+    def build_url(self, query):
+        """Build a URL to refer back to this add-on."""
+        return sys.argv[0] + '?' + urllib.urlencode(query)
+
     def run(self, arguments):
         params = dict(urlparse.parse_qsl( re.sub(r'^\?', '', arguments) ))
         mode = params.get('mode')
@@ -72,9 +72,9 @@ class Plugin(object):
         elif mode in self._mode_mapping:
             self._mode_mapping[mode](**params)
 
-plugin = Plugin()
+handler = RequestHandler()
 
-@plugin.handler
+@handler.handler
 def link_account(first_run=False, **kwargs):
     dialog = xbmcgui.Dialog()
     nolabel = 'Skip' if first_run else 'Cancel'
@@ -106,7 +106,7 @@ def link_account(first_run=False, **kwargs):
     # If we got here, we gave up trying to link the account.
     return False
 
-@plugin.handler
+@handler.handler
 def unlink_account(**kwargs):
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno('Oh no!',
@@ -115,7 +115,7 @@ def unlink_account(**kwargs):
     if ok:
         my_addon.setSetting('api_key', '')
 
-@plugin.default_handler
+@handler.default_handler
 def categories(**kwargs):
     if my_addon.getSetting('first_run') == 'true':
         if not my_addon.getSetting('api_key'):
@@ -127,14 +127,14 @@ def categories(**kwargs):
     for category in data['results']:
         name = category['name']
         mode = 'endurance' if category['id'] == 5 else 'videos'
-        url = build_url({ 'mode': mode, 'video_type': category['id'] })
+        url = handler.build_url({ 'mode': mode, 'video_type': category['id'] })
         li = xbmcgui.ListItem(category['name'], iconImage='DefaultFolder.png')
 
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True,
                                     totalItems=total)
 
-    url = build_url({ 'mode': 'search' })
+    url = handler.build_url({ 'mode': 'search' })
     li = xbmcgui.ListItem('Search', iconImage='DefaultFolder.png')
     xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                 listitem=li, isFolder=True,
@@ -149,16 +149,16 @@ def list_videos(data, page, extraargs):
 
     menu = []
     if page != 0:
-        url = build_url({ 'page': page-1 }.extend(extraargs))
+        url = handler.build_url({ 'page': page-1 }.extend(extraargs))
         menu.append(('Previous page', 'Container.Update(' + url + ', replace)'))
     if (page+1) * 100 < total:
-        url = build_url({ 'page': page+1 }.extend(extraargs))
+        url = handler.build_url({ 'page': page+1 }.extend(extraargs))
         menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
 
     for video in data['results']:
         name = video['name']
         remote_url = video['high_url']
-        url = build_url({ 'mode': 'play', 'url': remote_url })
+        url = handler.build_url({ 'mode': 'play', 'url': remote_url })
         date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
         duration = video['length_seconds']
 
@@ -177,7 +177,7 @@ def list_videos(data, page, extraargs):
 
     xbmcplugin.endOfDirectory(addon_id)
 
-@plugin.handler
+@handler.handler
 def videos(video_type, page='0', gb_filter=None, **kwargs):
     page = int(page)
     api_params = { 'video_type': video_type, 'offset': page*100 }
@@ -188,20 +188,20 @@ def videos(video_type, page='0', gb_filter=None, **kwargs):
     data = query_api('videos', api_params)
     list_videos(data, page, plugin_params)
 
-@plugin.handler
+@handler.handler
 def endurance(**kwargs):
     runs = [ 'Chrono Trigger', 'Deadly Premonition', 'Persona 4',
              'The Matrix Online' ]
 
     for run in runs:
-        url = build_url({ 'mode': 'videos', 'video_type': '5',
-                          'gb_filter': 'name:' + run })
+        url = handler.build_url({ 'mode': 'videos', 'video_type': '5',
+                                  'gb_filter': 'name:' + run })
         li = xbmcgui.ListItem(run, iconImage='DefaultFolder.png')
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True)
     xbmcplugin.endOfDirectory(addon_id)
 
-@plugin.handler
+@handler.handler
 def search(query=None, page='0', **kwargs):
     page = int(page)
 
@@ -218,7 +218,7 @@ def search(query=None, page='0', **kwargs):
                                  'offset': page*100})
     list_videos(data, page, { 'mode': 'search', 'query': query })
 
-@plugin.handler
+@handler.handler
 def play(url, **kwargs):
     li = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_id, True, li)
@@ -229,4 +229,4 @@ if my_addon.getSetting('api_key'):
 xbmcplugin.setContent(addon_id, 'movies')
 xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
 
-plugin.run(sys.argv[2])
+handler.run(sys.argv[2])
