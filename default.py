@@ -147,20 +147,28 @@ def list_videos(data, page, extraargs):
 
     total = data['number_of_total_results']
 
+    quality_mapping = ['low_url', 'high_url', 'hd_url']
+    quality = quality_mapping[ int(my_addon.getSetting('quality')) ]
+
     menu = []
-    if page != 0:
-        url = handler.build_url({ 'page': page-1 }.extend(extraargs))
+    if page > 0:
+        url = handler.build_url(dict(page=page-1, **extraargs))
         menu.append(('Previous page', 'Container.Update(' + url + ', replace)'))
     if (page+1) * 100 < total:
-        url = handler.build_url({ 'page': page+1 }.extend(extraargs))
+        url = handler.build_url(dict(page=page+1, **extraargs))
         menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
 
     for video in data['results']:
         name = video['name']
-        remote_url = video['high_url']
-        url = handler.build_url({ 'mode': 'play', 'url': remote_url })
         date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
         duration = video['length_seconds']
+
+        # Build the URL for playing the video
+        remote_url = video.get(quality, video['high_url'])
+        if quality == 'hd_url' and 'hd_url' in video:
+            # XXX: This assumes the URL already has a query string!
+            remote_url += '&' + urllib.urlencode({ 'api_key': API_KEY })
+        url = handler.build_url({ 'mode': 'play', 'url': remote_url })
 
         li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
                               thumbnailImage=video['image']['super_url'])

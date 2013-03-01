@@ -2,8 +2,10 @@
 <settings>
     <setting id="first_run" type="bool" default="true" label="First Run"
              visible="false" />
-    <setting id="quality" type="enum" values="Auto|Low|High" default="0"
+    <setting id="quality" type="enum" values="Low|High|HD" default="2"
              label="Quality" />
+    <setting label="Note: HD quality is only available to subscribers"
+             type="lsep"/>
     <setting id="api_key" type="text" default="" option="hidden" label="API Key"
              visible="false" />
     <setting type="action"
