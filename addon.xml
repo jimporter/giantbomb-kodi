@@ -8,7 +8,7 @@
     <import addon="script.module.simplejson" version="2.0.10"/>
   </requires>
   <extension point="xbmc.python.pluginsource"
-            library="default.py">
+             library="default.py">
         <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">

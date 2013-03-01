@@ -2,11 +2,14 @@
 <settings>
     <setting id="first_run" type="bool" default="true" label="First Run"
              visible="false" />
-    <setting id="api_key" type="text" default="" option="hidden" label="API Key"
-             visible="false" />
     <setting id="quality" type="enum" values="Auto|Low|High" default="0"
              label="Quality" />
+    <setting id="api_key" type="text" default="" option="hidden" label="API Key"
+             visible="true" />
     <setting type="action"
-             action="RunScript(plugin.video.giantbombex, 0, mode=link&amp;from_settings=true)"
-             label="Link Account" />
+             action="RunScript(plugin.video.giantbombex, 0, mode=link_account)"
+             label="Link Account" visible="eq(-1,)" />
+    <setting type="action"
+             action="RunScript(plugin.video.giantbombex, 0, mode=unlink_account)"
+             label="Unlink Account" visible="!eq(-2,)" />
 </settings>

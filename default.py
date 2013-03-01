@@ -25,7 +25,7 @@ def query_api(resource, query=None, format='json'):
     url = API_PATH + '/' + resource + '?' + urllib.urlencode(full_query)
     data = simplejson.loads(urllib2.urlopen(url).read())
 
-    if data['status_code'] == 100:
+    if data.get('status_code', 1) == 100:
         dump('Warning! Bad API key detected. Resetting the key and retrying.')
         global API_KEY
         API_KEY = DEFAULT_API_KEY
@@ -42,7 +42,6 @@ def get_api_key(link_code):
     """Get the API key from the site given the link code."""
     if link_code and len(link_code) == 6:
         data = query_api('validate', { 'link_code': link_code })
-        dump(simplejson.dumps(data, indent=2))
         if data.get('api_key'):
             global API_KEY
             API_KEY = data['api_key']
@@ -76,9 +75,9 @@ class Plugin(object):
 plugin = Plugin()
 
 @plugin.handler
-def link_account(from_settings=False, **kwargs):
+def link_account(first_run=False, **kwargs):
     dialog = xbmcgui.Dialog()
-    nolabel = 'Cancel' if from_settings else 'Skip'
+    nolabel = 'Skip' if first_run else 'Cancel'
     ok = dialog.yesno("Let's do this.",
                       'To link your account, visit',
                       'www.giantbomb.com/xbmc to get a link code.',
@@ -107,11 +106,20 @@ def link_account(from_settings=False, **kwargs):
     # If we got here, we gave up trying to link the account.
     return False
 
+@plugin.handler
+def unlink_account(**kwargs):
+    dialog = xbmcgui.Dialog()
+    ok = dialog.yesno('Oh no!',
+                      'Are you sure you want to unlink your account?',
+                      yeslabel='Unlink', nolabel='Cancel')
+    if ok:
+        my_addon.setSetting('api_key', '')
+
 @plugin.default_handler
 def categories(**kwargs):
     if my_addon.getSetting('first_run') == 'true':
         if not my_addon.getSetting('api_key'):
-            link_account()
+            link_account(first_run=True)
         my_addon.setSetting('first_run', 'false')
 
     data = query_api('video_types')
@@ -216,8 +224,7 @@ def play(url, **kwargs):
     xbmcplugin.setResolvedUrl(addon_id, True, li)
 
 if my_addon.getSetting('api_key'):
-    global API_KEY
-    API_KEY = user_api_key
+    API_KEY = my_addon.getSetting('api_key')
 
 xbmcplugin.setContent(addon_id, 'movies')
 xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
