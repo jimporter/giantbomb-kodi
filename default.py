@@ -169,6 +169,8 @@ def list_videos(data, page, plugin_params=None):
     if page == 'all':
         this_page = total
     else:
+        this_page = len(data['results'])
+
         if page > 0:
             url = handler.build_url(dict(page=page-1, **plugin_params))
             menu.append(('Previous page',
@@ -176,9 +178,6 @@ def list_videos(data, page, plugin_params=None):
         if (page+1) * 100 < total:
             url = handler.build_url(dict(page=page+1, **plugin_params))
             menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
-            this_page = 100
-        else:
-            this_page = total % 100
 
     for video in data['results']:
         name = video['name']
