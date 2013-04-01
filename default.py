@@ -138,7 +138,10 @@ def categories():
     for category in data['results']:
         name = category['name']
         mode = 'endurance' if category['id'] == 5 else 'videos'
-        url = handler.build_url({ 'mode': mode, 'video_type': category['id'] })
+        url = handler.build_url({
+                'mode': mode,
+                'gb_filter': 'video_type:%d' % category['id']
+                })
         li = xbmcgui.ListItem(category['name'], iconImage='DefaultFolder.png')
 
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
@@ -203,12 +206,10 @@ def list_videos(data, page, plugin_params=None):
                                     listitem=li, totalItems=this_page)
 
 @handler.handler
-def videos(video_type=None, page='0', gb_filter=None):
+def videos(gb_filter=None, page='0'):
     api_params = {}
     plugin_params = { 'mode': 'videos' }
 
-    if video_type:
-        api_params['video_type'] = plugin_params['video_type'] = video_type
     if gb_filter:
         api_params['filter'] = plugin_params['gb_filter'] = gb_filter
 
@@ -230,17 +231,13 @@ def videos(video_type=None, page='0', gb_filter=None):
     xbmcplugin.endOfDirectory(addon_id)
 
 @handler.handler
-def endurance(video_type):
+def endurance(gb_filter):
     runs = [ 'Chrono Trigger', 'Deadly Premonition', 'Persona 4',
              'The Matrix Online' ]
 
     for run in runs:
-        # Giant Bomb's API is broken right now and wants the video_type as a
-        # filter for filtering by name to work. This is why thorough unit tests
-        # are important, people!
         url = handler.build_url({ 'mode': 'videos', 'page': 'all',
-                                  'gb_filter': 'name:' + run + ',video_type:' +
-                                  video_type })
+                                  'gb_filter': gb_filter + ',name:%s' % run })
         li = xbmcgui.ListItem(run, iconImage='DefaultFolder.png')
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True)
