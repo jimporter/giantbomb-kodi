@@ -153,22 +153,29 @@ def categories():
                                 totalItems=total)
     xbmcplugin.endOfDirectory(addon_id)
 
-def list_videos(data, page, extraargs):
+def list_videos(data, page, plugin_params=None):
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_DATE)
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_TITLE)
-
-    total = data['number_of_total_results']
 
     quality_mapping = ['low_url', 'high_url', 'hd_url']
     quality = quality_mapping[ int(my_addon.getSetting('quality')) ]
 
     menu = []
-    if page > 0:
-        url = handler.build_url(dict(page=page-1, **extraargs))
-        menu.append(('Previous page', 'Container.Update(' + url + ', replace)'))
-    if (page+1) * 100 < total:
-        url = handler.build_url(dict(page=page+1, **extraargs))
-        menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
+
+    total = data['number_of_total_results']
+    if page == 'all':
+        this_page = total
+    else:
+        if page > 0:
+            url = handler.build_url(dict(page=page-1, **plugin_params))
+            menu.append(('Previous page',
+                         'Container.Update(' + url + ', replace)'))
+        if (page+1) * 100 < total:
+            url = handler.build_url(dict(page=page+1, **plugin_params))
+            menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
+            this_page = 100
+        else:
+            this_page = total % 100
 
     for video in data['results']:
         name = video['name']
@@ -193,14 +200,11 @@ def list_videos(data, page, extraargs):
         li.setProperty('IsPlayable', 'true')
         li.addContextMenuItems(menu)
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
-                                    listitem=li, totalItems=total)
-
-    xbmcplugin.endOfDirectory(addon_id)
+                                    listitem=li, totalItems=this_page)
 
 @handler.handler
 def videos(video_type=None, page='0', gb_filter=None):
-    page = int(page)
-    api_params = { 'offset': page*100 }
+    api_params = {}
     plugin_params = { 'mode': 'videos' }
 
     if video_type:
@@ -208,17 +212,35 @@ def videos(video_type=None, page='0', gb_filter=None):
     if gb_filter:
         api_params['filter'] = plugin_params['gb_filter'] = gb_filter
 
-    data = query_api('videos', api_params)
-    list_videos(data, page, plugin_params)
+    if page == 'all':
+        data = query_api('videos', api_params)
+        list_videos(data, page, plugin_params)
+        total = data['number_of_total_results']
+
+        for offset in range(100, total, 100):
+            api_params['offset'] = offset
+            data = query_api('videos', api_params)
+            list_videos(data, page, plugin_params)
+    else:
+        page = int(page)
+        api_params['offset'] = page * 100
+        data = query_api('videos', api_params)
+        list_videos(data, page, plugin_params)
+
+    xbmcplugin.endOfDirectory(addon_id)
 
 @handler.handler
-def endurance():
+def endurance(video_type):
     runs = [ 'Chrono Trigger', 'Deadly Premonition', 'Persona 4',
              'The Matrix Online' ]
 
     for run in runs:
-        url = handler.build_url({ 'mode': 'videos', 'video_type': '5',
-                                  'gb_filter': 'name:' + run })
+        # Giant Bomb's API is broken right now and wants the video_type as a
+        # filter for filtering by name to work. This is why thorough unit tests
+        # are important, people!
+        url = handler.build_url({ 'mode': 'videos', 'page': 'all',
+                                  'gb_filter': 'name:' + run + ',video_type:' +
+                                  video_type })
         li = xbmcgui.ListItem(run, iconImage='DefaultFolder.png')
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True)
@@ -238,8 +260,9 @@ def search(query=None, page='0'):
             return
 
     data = query_api('search', { 'resources': 'video', 'query': query,
-                                 'offset': page*100})
+                                 'offset': page*100 })
     list_videos(data, page, { 'mode': 'search', 'query': query })
+    xbmcplugin.endOfDirectory(addon_id)
 
 @handler.handler
 def play(url):
