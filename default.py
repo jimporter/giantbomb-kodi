@@ -1,12 +1,12 @@
 import re
+import simplejson
+import time
 import urllib
 import urllib2
 import urlparse
-import simplejson
 import xbmcaddon
 import xbmcplugin
 import xbmcgui
-import time
 
 API_PATH = 'http://api.giantbomb.com'
 DEFAULT_API_KEY = 'fa96542d69b4af7f31c2049ace5d89e84e225bef'
@@ -66,7 +66,7 @@ class RequestHandler(object):
 
     def run(self, arguments):
         params = dict(urlparse.parse_qsl( re.sub(r'^\?', '', arguments) ))
-        mode = params.get('mode')
+        mode = params.pop('mode', None)
         if mode is None:
             self._default_mode_mapping(**params)
         elif mode in self._mode_mapping:
@@ -75,7 +75,7 @@ class RequestHandler(object):
 handler = RequestHandler()
 
 @handler.handler
-def link_account(first_run=False, **kwargs):
+def link_account(first_run=False):
     dialog = xbmcgui.Dialog()
     nolabel = 'Skip' if first_run else 'Cancel'
     ok = dialog.yesno("Let's do this.",
@@ -107,7 +107,7 @@ def link_account(first_run=False, **kwargs):
     return False
 
 @handler.handler
-def unlink_account(**kwargs):
+def unlink_account():
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno('Oh no!',
                       'Are you sure you want to unlink your account?',
@@ -116,14 +116,25 @@ def unlink_account(**kwargs):
         my_addon.setSetting('api_key', '')
 
 @handler.default_handler
-def categories(**kwargs):
+def categories():
     if my_addon.getSetting('first_run') == 'true':
         if not my_addon.getSetting('api_key'):
             link_account(first_run=True)
         my_addon.setSetting('first_run', 'false')
 
     data = query_api('video_types')
-    total = data['number_of_total_results'] + 1 # Add one for "Search"
+    # Count up the total number of categories; add one for "Latest" and one more
+    # for "Search".
+    total = data['number_of_total_results'] + 2
+
+    # Add the "Latest" pseudo-category
+    url = handler.build_url({ 'mode': 'videos' })
+    li = xbmcgui.ListItem('Latest', iconImage='DefaultFolder.png')
+    xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
+                                listitem=li, isFolder=True,
+                                totalItems=total)
+
+    # Add all the real categories
     for category in data['results']:
         name = category['name']
         mode = 'endurance' if category['id'] == 5 else 'videos'
@@ -134,6 +145,7 @@ def categories(**kwargs):
                                     listitem=li, isFolder=True,
                                     totalItems=total)
 
+    # Add the "Search" pseudo-category
     url = handler.build_url({ 'mode': 'search' })
     li = xbmcgui.ListItem('Search', iconImage='DefaultFolder.png')
     xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
@@ -186,18 +198,21 @@ def list_videos(data, page, extraargs):
     xbmcplugin.endOfDirectory(addon_id)
 
 @handler.handler
-def videos(video_type, page='0', gb_filter=None, **kwargs):
+def videos(video_type=None, page='0', gb_filter=None):
     page = int(page)
-    api_params = { 'video_type': video_type, 'offset': page*100 }
-    plugin_params = { 'mode': 'videos', 'video_type': video_type }
+    api_params = { 'offset': page*100 }
+    plugin_params = { 'mode': 'videos' }
+
+    if video_type:
+        api_params['video_type'] = plugin_params['video_type'] = video_type
     if gb_filter:
-        api_params['filter'] = gb_filter
-        plugin_params['gb_filter'] = gb_filter
+        api_params['filter'] = plugin_params['gb_filter'] = gb_filter
+
     data = query_api('videos', api_params)
     list_videos(data, page, plugin_params)
 
 @handler.handler
-def endurance(**kwargs):
+def endurance():
     runs = [ 'Chrono Trigger', 'Deadly Premonition', 'Persona 4',
              'The Matrix Online' ]
 
@@ -210,7 +225,7 @@ def endurance(**kwargs):
     xbmcplugin.endOfDirectory(addon_id)
 
 @handler.handler
-def search(query=None, page='0', **kwargs):
+def search(query=None, page='0'):
     page = int(page)
 
     if query is None:
@@ -227,7 +242,7 @@ def search(query=None, page='0', **kwargs):
     list_videos(data, page, { 'mode': 'search', 'query': query })
 
 @handler.handler
-def play(url, **kwargs):
+def play(url):
     li = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_id, True, li)
 
