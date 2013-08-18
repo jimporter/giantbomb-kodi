@@ -130,6 +130,7 @@ def categories():
     # Add the "Latest" pseudo-category
     url = handler.build_url({ 'mode': 'videos' })
     li = xbmcgui.ListItem('Latest', iconImage='DefaultFolder.png')
+    li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
     xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                 listitem=li, isFolder=True,
                                 totalItems=total)
@@ -143,7 +144,7 @@ def categories():
                 'gb_filter': 'video_type:%d' % category['id']
                 })
         li = xbmcgui.ListItem(category['name'], iconImage='DefaultFolder.png')
-
+        li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True,
                                     totalItems=total)
@@ -151,9 +152,11 @@ def categories():
     # Add the "Search" pseudo-category
     url = handler.build_url({ 'mode': 'search' })
     li = xbmcgui.ListItem('Search', iconImage='DefaultFolder.png')
+    li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
     xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                 listitem=li, isFolder=True,
                                 totalItems=total)
+
     xbmcplugin.endOfDirectory(addon_id)
 
 def list_videos(data, page, plugin_params=None):
@@ -198,6 +201,7 @@ def list_videos(data, page, plugin_params=None):
                 })
         li.setProperty('IsPlayable', 'true')
         li.addContextMenuItems(menu)
+        li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, totalItems=this_page)
 
