@@ -157,9 +157,6 @@ def categories():
     xbmcplugin.endOfDirectory(addon_id)
 
 def list_videos(data, page, plugin_params=None):
-    xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_DATE)
-    xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_TITLE)
-
     quality_mapping = ['low_url', 'high_url', 'hd_url']
     quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
 
