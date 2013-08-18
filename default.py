@@ -12,7 +12,7 @@ API_PATH = 'http://api.giantbomb.com'
 DEFAULT_API_KEY = 'fa96542d69b4af7f31c2049ace5d89e84e225bef'
 API_KEY = DEFAULT_API_KEY
 addon_id = int(sys.argv[1])
-my_addon = xbmcaddon.Addon('plugin.video.giantbombex')
+my_addon = xbmcaddon.Addon('plugin.video.giantbomb')
 
 def dump(s):
     print '[GB2] ' + str(s)
@@ -161,7 +161,7 @@ def list_videos(data, page, plugin_params=None):
     xbmcplugin.addSortMethod(addon_id, xbmcplugin.SORT_METHOD_TITLE)
 
     quality_mapping = ['low_url', 'high_url', 'hd_url']
-    quality = quality_mapping[ int(my_addon.getSetting('quality')) ]
+    quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
 
     menu = []
 

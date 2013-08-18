@@ -2,16 +2,16 @@
 <settings>
     <setting id="first_run" type="bool" default="true" label="First Run"
              visible="false" />
-    <setting id="quality" type="enum" values="Low|High|HD" default="2"
+    <setting id="video_quality" type="enum" values="Low|High|HD" default="2"
              label="Quality" />
     <setting label="Note: HD quality is only available to subscribers"
              type="lsep"/>
     <setting id="api_key" type="text" default="" option="hidden" label="API Key"
              visible="false" />
     <setting type="action"
-             action="RunScript(plugin.video.giantbombex, 0, mode=link_account)"
+             action="RunScript(plugin.video.giantbomb, 0, mode=link_account)"
              label="Link Account" visible="eq(-1,)" />
     <setting type="action"
-             action="RunScript(plugin.video.giantbombex, 0, mode=unlink_account)"
+             action="RunScript(plugin.video.giantbomb, 0, mode=unlink_account)"
              label="Unlink Account" visible="!eq(-2,)" />
 </settings>

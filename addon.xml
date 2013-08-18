@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.giantbombex"
-       name="Giant Bomb EX"
+<addon id="plugin.video.giantbomb"
+       name="Giant Bomb"
        version="1.0"
        provider-name="Jim">
   <requires>
