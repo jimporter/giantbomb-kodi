@@ -189,7 +189,6 @@ def list_videos(data, page, plugin_params=None):
         if quality == 'hd_url' and 'hd_url' in video:
             # XXX: This assumes the URL already has a query string!
             remote_url += '&' + urllib.urlencode({ 'api_key': API_KEY })
-        url = handler.build_url({ 'mode': 'play', 'url': remote_url })
 
         li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
                               thumbnailImage=video['image']['super_url'])
@@ -202,7 +201,7 @@ def list_videos(data, page, plugin_params=None):
         li.setProperty('IsPlayable', 'true')
         li.addContextMenuItems(menu)
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
-        xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=remote_url,
                                     listitem=li, totalItems=this_page)
 
 @handler.handler
@@ -260,11 +259,6 @@ def search(query=None, page='0'):
                                  'offset': page*100 })
     list_videos(data, page, { 'mode': 'search', 'query': query })
     xbmcplugin.endOfDirectory(addon_id)
-
-@handler.handler
-def play(url):
-    li = xbmcgui.ListItem(path=url)
-    xbmcplugin.setResolvedUrl(addon_id, True, li)
 
 if my_addon.getSetting('api_key'):
     API_KEY = my_addon.getSetting('api_key')
