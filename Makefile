@@ -13,3 +13,8 @@ install-dev: uninstall-dev
 .PHONY: package
 package:
 	zip $(ADDON_NAME).zip $(ADDON_NAME)
+
+.PHONY: test
+test:
+	PYTHONPATH=$(PWD)/$(ADDON_NAME):$(PYTHONPATH) \
+	python -m unittest discover test
