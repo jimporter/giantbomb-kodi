@@ -6,12 +6,27 @@ API_PATH = 'http://api.giantbomb.com'
 DEFAULT_API_KEY = 'fa96542d69b4af7f31c2049ace5d89e84e225bef'
 
 class GiantBomb(object):
+    """A simple interface to the Giant Bomb API."""
+
     def __init__(self, api_key=None, on_update_api_key=None):
+        """Create a new instance of the Giant Bomb API requester.
+
+        :param api_key: The API key to use (or None to use the default)
+        :param on_update_api_key: A function to call if the API key is changed
+        """
+
         self.api_key = api_key or DEFAULT_API_KEY
         self.on_update_api_key = on_update_api_key
 
     def query(self, resource, query=None, format='json', retry=True):
-        """Query the Giant Bomb API."""
+        """Query the Giant Bomb API.
+
+        :param resource: The resource to be queried
+        :param query: A dict of the query arguments to pass to the resource
+        :param format: The format to receive the response in
+        :param retry: True if we should retry the query if the API key is bad
+        :return: A dict with the response data from the API"""
+
         full_query = { 'api_key': self.api_key, 'format': format }
         if query:
             full_query.update(query)
@@ -28,12 +43,26 @@ class GiantBomb(object):
                     self.on_update_api_key(self.api_key)
                 if retry:
                     return self.query(resource, query, format, retry=False)
-            raise Exception('failure') # XXX stringify this
+
+            error_descrs = {
+                100: 'Invalid API Key',
+                101: 'Object Not Found',
+                102: 'Error in URL Format',
+                103: "'jsonp' format requires a 'json_callback' argument",
+                104: 'Filter Error',
+                105: 'Subscriber only video is for subscribers only',
+                }
+            descr = error_descrs.get(status, 'Unknown Status Code %d' % status)
+            raise Exception(descr)
 
     def get_api_key(self, link_code):
-        """Get the API key from the site given the link code."""
+        """Get the API key from the site given the link code.
+
+        :param link_code: The link code received from the Giant Bomb website
+        :return: The API key, or None if something went wrong
+        """
         if link_code and len(link_code) == 6:
-            data = query_api('validate', { 'link_code': link_code })
+            data = self.query('validate', { 'link_code': link_code })
             if 'api_key' in data:
                 self.api_key = data['api_key']
                 if callable(self.on_update_api_key):
