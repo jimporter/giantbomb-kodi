@@ -110,7 +110,9 @@ def list_videos(data, page, plugin_params=None):
 
     menu = []
 
-    total = data['number_of_total_results']
+    # Make sure this value is an int, since Giant Bomb currently returns this as
+    # a string.
+    total = int(data['number_of_total_results'])
     if page == 'all':
         this_page = total
     else:
@@ -160,7 +162,9 @@ def videos(gb_filter=None, page='0'):
     if page == 'all':
         data = gb.query('videos', api_params)
         list_videos(data, page, plugin_params)
-        total = data['number_of_total_results']
+        # Make sure this value is an int, since Giant Bomb currently returns
+        # this as a string.
+        total = int(data['number_of_total_results'])
 
         for offset in range(100, total, 100):
             api_params['offset'] = offset
