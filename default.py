@@ -151,7 +151,7 @@ def list_videos(data, page, plugin_params=None):
 
 @handler.handler
 def videos(gb_filter=None, page='0'):
-    api_params = {}
+    api_params = { 'sort': 'publish_date:desc' }
     plugin_params = { 'mode': 'videos' }
 
     if gb_filter:
