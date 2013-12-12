@@ -2,10 +2,10 @@ from resources.lib.giantbomb import GiantBomb
 from resources.lib.requesthandler import RequestHandler
 from resources.lib.rssparser import RSSParser
 from resources.lib.urlcache import URLCache
+from resources.lib.videodb import VideoDB
 
 import os.path
 import re
-import sqlite3
 import sys
 import time
 import urllib
@@ -13,37 +13,6 @@ import xbmc
 import xbmcaddon
 import xbmcplugin
 import xbmcgui
-
-def get_video_info(c, filename):
-    """Get the playback info for the video file from the XBMC database. XXX:
-    This is technically against the rules to do, but XBMC won't let us do it any
-    other way.
-
-    :param c: The database cursor
-    :param filename: The filename to get info for
-    :return: A dict with the video info
-    """
-
-    (basepath, leaf) = filename.rsplit('/', 1)
-    basepath += '/'
-
-    try:
-        c.execute('select idPath from path where strPath=?', (basepath,))
-        pathid = c.fetchone()[0]
-        c.execute('select idFile from files where strFileName=? and idPath=?',
-                  (leaf, pathid))
-        fileid = c.fetchone()[0]
-        c.execute('select * from files ' +
-                  'left join bookmark on bookmark.idFile = files.idFile and ' +
-                  'bookmark.type = 1 ' +
-                  'where files.idFile=? and files.idPath=?',
-                  (fileid, pathid))
-        result = c.fetchone()
-        return { 'playcount': result[3], 'lastplayed': result[4],
-                 'resumetime': str(result[8]), 'totaltime': str(result[9]) }
-    except:
-        return { 'playcount': 0, 'lastplayed': '',
-                 'resumetime': '', 'totaltime': '' }
 
 addon_id = int(sys.argv[1])
 my_addon = xbmcaddon.Addon('plugin.video.giantbomb')
@@ -173,9 +142,7 @@ def list_videos(data, page, plugin_params=None):
     :param plugin_params: An optional dict of parameters to pass back to the
                           plugin; used for navigating between pages"""
 
-    dbpath = xbmc.translatePath("special://profile/Database/MyVideos75.db")
-    conn = sqlite3.connect(dbpath)
-    c = conn.cursor()
+    videodb = VideoDB()
 
     quality_mapping = ['low_url', 'high_url', 'hd_url']
     quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
@@ -200,32 +167,24 @@ def list_videos(data, page, plugin_params=None):
                               'Container.Update({0}, replace)'.format(url)))
 
     for video in data['results']:
-        name = video['name']
-        date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
-        duration = video['length_seconds']
-
-        # Build the URL for playing the video
+        # Build the URL for playing the video.
         remote_url = video.get(quality, video['high_url'])
         if quality == 'hd_url' and 'hd_url' in video:
             # XXX: This assumes the URL already has a query string!
             remote_url += '&' + urllib.urlencode({ 'api_key': gb.api_key })
 
-        info = get_video_info(c, remote_url)
+        fileid = videodb.get_file_id(remote_url)
+        name = video['name']
+        date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
 
         li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
-                              thumbnailImage=video['image']['super_url'],
-                              path=remote_url)
-        li.addStreamInfo('video', { 'duration': duration })
+                              thumbnailImage=video['image']['super_url'])
         li.setInfo('video', infoLabels={
                 'title': name,
                 'plot': video['deck'],
                 'date': time.strftime('%d.%m.%Y', date),
-                'playcount': info['playcount'],
-                'lastplayed': info['lastplayed'],
                 })
         li.setProperty('IsPlayable', 'true')
-        li.setProperty('TotalTime', info['totaltime'])
-        li.setProperty('ResumeTime', info['resumetime'])
 
         if video.get('youtube_id'):
             youtube_item = (
@@ -237,7 +196,33 @@ def list_videos(data, page, plugin_params=None):
             li.addContextMenuItems(page_menu)
 
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
-        li.addContextMenuItems(menu)
+
+        # Try to get the play count and last played time.
+        playback_info = videodb.get_playback_info(fileid)
+        if playback_info:
+            li.setInfo('video', infoLabels={
+                    'playcount': playback_info['playcount'],
+                    'lastplayed': playback_info['lastplayed']
+                    })
+
+        # Try to get the bookmark for resuming the video. Note: XBMC mostly
+        # handles this automatically, but we need to do it manually to get the
+        # "resume playback" icon in the list.
+        bookmark = videodb.get_bookmark(fileid)
+        if bookmark:
+            li.setProperty('TotalTime', str(bookmark['totaltime']))
+            li.setProperty('ResumeTime', str(bookmark['resumetime']))
+
+        # Try to get the stream details. If we don't have them, at least fill in
+        # the duration.
+        stream_details = videodb.get_stream_details(fileid)
+        if stream_details and 'video' in stream_details:
+            li.addStreamInfo('video', stream_details['video'])
+        else:
+            li.addStreamInfo('video', { 'duration': video['length_seconds'] })
+        if stream_details and 'audio' in stream_details:
+            li.addStreamInfo('audio', stream_details['audio'])
+
         xbmcplugin.addDirectoryItem(handle=addon_id, url=remote_url,
                                     listitem=li, totalItems=this_page)
 
