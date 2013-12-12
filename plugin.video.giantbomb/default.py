@@ -3,6 +3,7 @@ from resources.lib.requesthandler import RequestHandler
 
 import time
 import urllib
+import xbmc
 import xbmcaddon
 import xbmcplugin
 import xbmcgui
