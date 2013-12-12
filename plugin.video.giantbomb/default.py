@@ -23,6 +23,12 @@ xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
 
 @handler.page
 def link_account(first_run=False):
+    """Link this XBMC profile to the user's Giant Bomb account by asking them to
+    go to a link on their computer and get a link code.
+
+    :param first_run: True if this is the first time the add-on has been run;
+                      False otherwise"""
+
     dialog = xbmcgui.Dialog()
     nolabel = 'Skip' if first_run else 'Cancel'
     ok = dialog.yesno("Let's do this.",
@@ -55,6 +61,8 @@ def link_account(first_run=False):
 
 @handler.page
 def unlink_account():
+    """Unlink this XBMC profile from the user's Giant Bomb account."""
+
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno('Oh no!',
                       'Are you sure you want to unlink your account?',
@@ -64,6 +72,8 @@ def unlink_account():
 
 @handler.default_page
 def categories():
+    """Display the list of video categories from Giant Bomb."""
+
     if my_addon.getSetting('first_run') == 'true':
         if not my_addon.getSetting('api_key'):
             link_account(first_run=True)
@@ -107,6 +117,14 @@ def categories():
     xbmcplugin.endOfDirectory(addon_id)
 
 def list_videos(data, page, plugin_params=None):
+    """Given a JSON response from Giant Bomb with a bunch of videos, add them to
+    XBMC.
+
+    :param data: The JSON response
+    :param page: The 0-offset page number, or 'all' to show all pages
+    :param plugin_params: An optional dict of parameters to pass back to the
+                          plugin; used for navigating between pages"""
+
     quality_mapping = ['low_url', 'high_url', 'hd_url']
     quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
 
@@ -155,6 +173,13 @@ def list_videos(data, page, plugin_params=None):
 
 @handler.page
 def videos(gb_filter=None, page='0'):
+    """List the videos satisfying some filter criteria.
+
+    :param gb_filter: A filter to send to the Giant Bomb API to filter the video
+                      results
+    :param page: A 0-offset page number (as a string); or 'all' to show all
+                 pages"""
+
     api_params = { 'sort': 'publish_date:desc' }
     plugin_params = { 'mode': 'videos' }
 
@@ -182,6 +207,12 @@ def videos(gb_filter=None, page='0'):
 
 @handler.page
 def endurance(gb_filter):
+    """Show the list of Endurance Runs.
+
+    :param gb_filter: A filter to pass to the Giant Bomb API (this should be a
+                      filter to show only videos with the Endurance Run
+                      category)"""
+
     runs = [ 'Chrono Trigger', 'Deadly Premonition', 'Persona 4',
              'The Matrix Online' ]
 
@@ -195,6 +226,12 @@ def endurance(gb_filter):
 
 @handler.page
 def search(query=None, page='0'):
+    """Show some search results from the Giant Bomb API, or prompt the user to
+    enter a search query.
+
+    :param query: The search query
+    :param page: A 0-offset page number (as a string)"""
+
     page = int(page)
 
     if query is None:
