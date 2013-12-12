@@ -21,7 +21,7 @@ handler = RequestHandler(sys.argv[0])
 xbmcplugin.setContent(addon_id, 'movies')
 xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
 
-@handler.handler
+@handler.page
 def link_account(first_run=False):
     dialog = xbmcgui.Dialog()
     nolabel = 'Skip' if first_run else 'Cancel'
@@ -53,7 +53,7 @@ def link_account(first_run=False):
     # If we got here, we gave up trying to link the account.
     return False
 
-@handler.handler
+@handler.page
 def unlink_account():
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno('Oh no!',
@@ -62,7 +62,7 @@ def unlink_account():
     if ok:
         my_addon.setSetting('api_key', '')
 
-@handler.default_handler
+@handler.default_page
 def categories():
     if my_addon.getSetting('first_run') == 'true':
         if not my_addon.getSetting('api_key'):
@@ -153,7 +153,7 @@ def list_videos(data, page, plugin_params=None):
         xbmcplugin.addDirectoryItem(handle=addon_id, url=remote_url,
                                     listitem=li, totalItems=this_page)
 
-@handler.handler
+@handler.page
 def videos(gb_filter=None, page='0'):
     api_params = { 'sort': 'publish_date:desc' }
     plugin_params = { 'mode': 'videos' }
@@ -180,7 +180,7 @@ def videos(gb_filter=None, page='0'):
 
     xbmcplugin.endOfDirectory(addon_id)
 
-@handler.handler
+@handler.page
 def endurance(gb_filter):
     runs = [ 'Chrono Trigger', 'Deadly Premonition', 'Persona 4',
              'The Matrix Online' ]
@@ -193,7 +193,7 @@ def endurance(gb_filter):
                                     listitem=li, isFolder=True)
     xbmcplugin.endOfDirectory(addon_id)
 
-@handler.handler
+@handler.page
 def search(query=None, page='0'):
     page = int(page)
 

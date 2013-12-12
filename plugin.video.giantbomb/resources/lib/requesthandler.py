@@ -16,7 +16,7 @@ class RequestHandler(object):
         self._mode_mapping = {}
         self._default_mode_mapping = None
 
-    def handler(self, fn):
+    def page(self, fn):
         """A decorator to use for declaring a function as handling a particular
         mode for this add-on.
 
@@ -27,16 +27,16 @@ class RequestHandler(object):
         self._mode_mapping[fn.__name__] = fn
         return fn
 
-    def default_handler(self, fn):
+    def default_page(self, fn):
         """A decorator to use for declaring a function as being the default
-        handler for this add-on (as well as a regular handler; see above).
+        page for this add-on (as well as a regular page; see above).
 
         :param fn: The function to decorate
         :return: The decorated function
         """
 
         self._default_mode_mapping = fn
-        return self.handler(fn)
+        return self.page(fn)
 
     def build_url(self, query):
         """Build a URL to refer back to this add-on.
