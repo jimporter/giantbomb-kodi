@@ -1,6 +1,7 @@
 from resources.lib.giantbomb import GiantBomb
 from resources.lib.requesthandler import RequestHandler
 
+import sys
 import time
 import urllib
 import xbmc
