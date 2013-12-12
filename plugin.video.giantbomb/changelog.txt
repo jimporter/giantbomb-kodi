@@ -1,2 +1,25 @@
-4.0:
-- Initial release
+[B]4.0.0[/B]
+- Display more metadata for videos
+- Allow navigating through pages of results (via the context menu)
+- Fixed Endurance Runs
+
+[B]3.5[/B]
+- Added Chrono Trigger Endurance Run submenu
+
+[B]3.4[/B]
+- Fixed bug with search for non-subscribers
+
+[B]3.3[/B]
+- Version bump and minor compatibility changes for Eden branch
+
+[B]2.3[/B]
+- Added option to choose video quality
+
+[B]2.2[/B]
+- Fixed various account linking issues
+
+[B]2.1[/B]
+- Changed how add-on settings are stored
+
+[B]2.0[/B]
+- Initial release as new maintainer
