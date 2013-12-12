@@ -4,7 +4,7 @@
        version="4.0"
        provider-name="Jim">
   <requires>
-    <import addon="xbmc.python" version="2.0"/>
+    <import addon="xbmc.python" version="2.1.0"/>
     <import addon="script.module.simplejson" version="2.0.10"/>
   </requires>
   <extension point="xbmc.python.pluginsource"
@@ -13,7 +13,13 @@
   </extension>
   <extension point="xbmc.addon.metadata">
     <platform>all</platform>
-    <summary>Giant Bomb video plugin</summary>
-    <description>Giant Bomb is a video game enthusiast site with a sense of humor. Watch Jeff Gerstmann and crew in thousands of original game videos, reviews and previews.</description>
+    <summary lang="en">Giant Bomb video plugin</summary>
+    <description lang="en">Giant Bomb is a video game enthusiast site with a sense of humor. Watch Jeff Gerstmann and crew in thousands of original game videos, reviews and previews.</description>
+    <language>en</language>
+    <license>GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007</license>
+    <forum></forum>
+    <website></website>
+    <source></source>
+    <email></email>
   </extension>
 </addon>
