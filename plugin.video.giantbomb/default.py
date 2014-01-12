@@ -1,6 +1,8 @@
 from resources.lib.giantbomb import GiantBomb
 from resources.lib.requesthandler import RequestHandler
+from resources.lib.rssparser import RSSParser
 
+import re
 import sys
 import time
 import urllib
@@ -71,6 +73,18 @@ def unlink_account():
         my_addon.setSetting('api_key', '')
 
 @handler.default_page
+def index(content_type='video'):
+    """Display the index for the Giant Bomb add-on (either the video categories
+    or the list of podcasts.
+
+    :param content_type: The content type from XBMC (either 'video' or 'audio')
+    """
+
+    if content_type == 'video':
+        categories()
+    elif content_type == 'audio':
+        podcasts()
+
 def categories():
     """Display the list of video categories from Giant Bomb."""
 
@@ -158,7 +172,8 @@ def list_videos(data, page, plugin_params=None):
             remote_url += '&' + urllib.urlencode({ 'api_key': gb.api_key })
 
         li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
-                              thumbnailImage=video['image']['super_url'])
+                              thumbnailImage=video['image']['super_url'],
+                              path=remote_url)
         li.addStreamInfo('video', { 'duration': duration })
         li.setInfo('video', infoLabels={
                 'title': name,
@@ -247,5 +262,71 @@ def search(query=None, page='0'):
                                  'offset': page*100 })
     list_videos(data, page, { 'mode': 'search', 'query': query })
     xbmcplugin.endOfDirectory(addon_id)
+
+def podcasts():
+    """Display the list of podcasts from Giant Bomb."""
+
+    podcasts = [
+        { 'name': 'Giant Bombcast',
+          'url': 'http://www.giantbomb.com/podcast-xml/giant-bombcast/' },
+        { 'name': '8-4 Play',
+          'url': 'http://eightfour.libsyn.com/rss' },
+        { 'name': 'Giant Bomb Gaming Minute',
+          'url': 'http://www.giantbomb.com/podcast-xml/' +
+                 'giant-bomb-gaming-minute/' },
+        { 'name': "Giant Bomb's Interview Dumptruck",
+          'url': 'http://www.giantbomb.com/podcast-xml/interview-dumptruck/' },
+        { 'name': "Bombin' the A.M. With Scoops and the Wolf",
+          'url': 'http://www.giantbomb.com/podcast-xml/' +
+                 'bombin-the-a-m-with-scoops-and-the-wolf/' },
+        ]
+
+    for cast in podcasts:
+        url = handler.build_url({ 'mode': 'podcast', 'url': cast['url'] })
+        li = xbmcgui.ListItem(cast['name'], iconImage='DefaultFolder.png')
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
+                                    listitem=li, isFolder=True)
+    xbmcplugin.endOfDirectory(addon_id)
+
+@handler.page
+def podcast(url):
+    """Display the list of individual podcast items from a specific podcast.
+
+    :param url: The URL to the podcast's RSS feed."""
+
+    rss = RSSParser(url)
+
+    for item in rss.items:
+        date = time.strptime(re.sub(r' (\w{3}|[-+]\d{4})$', '', item['date']),
+                             '%a, %d %b %Y %H:%M:%S')
+        url = handler.build_url({ 'mode': 'play', 'url': item['url'] })
+
+        li = xbmcgui.ListItem(item['title'], iconImage='DefaultVideo.png',
+                              thumbnailImage=item['image'] or '',
+                              path=url)
+        li.setProperty('IsPlayable', 'true')
+        li.setInfo('music', infoLabels={
+                'title': item['title'],
+                'artist': item['author'],
+                'album': rss.title,
+                'year': date.tm_year,
+                'genre': 'Podcast',
+                'comment': item['description'],
+                'duration': item['length'],
+                'date': time.strftime('%d.%m.%Y', date),
+                })
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
+                                    listitem=li)
+    xbmcplugin.endOfDirectory(addon_id)
+
+@handler.page
+def play(url):
+    """Start playing a particular file.
+
+    :param url: The URL to the file."""
+
+    # XXX: This seems to fail sometimes and hang XBMC.
+    li = xbmcgui.ListItem(path=url)
+    xbmcplugin.setResolvedUrl(addon_id, True, li)
 
 handler.run(sys.argv[2])
