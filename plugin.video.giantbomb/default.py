@@ -187,7 +187,7 @@ def list_videos(data, page, plugin_params=None):
 
         if video.get('youtube_id'):
             youtube_item = (
-                'Play with Youtube',
+                'Play with YouTube',
                 ('PlayMedia(plugin://plugin.video.youtube/?action=play_video' +
                  '&videoid={0})').format(video['youtube_id']))
             li.addContextMenuItems([youtube_item] + page_menu)
