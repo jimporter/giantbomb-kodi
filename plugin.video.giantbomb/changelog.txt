@@ -1,6 +1,7 @@
 [B]4.0.0[/B]
 - Display more metadata for videos
 - Allow navigating through pages of results (via the context menu)
+- Allow playing non-subscriber videos via Youtube
 - Fixed Endurance Runs
 
 [B]3.5[/B]
