@@ -52,7 +52,8 @@ class GiantBomb(object):
                 104: 'Filter Error',
                 105: 'Subscriber only video is for subscribers only',
                 }
-            descr = error_descrs.get(status, 'Unknown Status Code %d' % status)
+            descr = error_descrs.get(status,
+                                     'Unknown Status Code {0}'.format(status))
             raise Exception(descr)
 
     def get_api_key(self, link_code):

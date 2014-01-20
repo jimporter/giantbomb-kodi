@@ -98,7 +98,7 @@ def categories():
         mode = 'endurance' if category['id'] == 5 else 'videos'
         url = handler.build_url({
                 'mode': mode,
-                'gb_filter': 'video_type:%d' % category['id']
+                'gb_filter': 'video_type:{0}'.format(category['id'])
                 })
         li = xbmcgui.ListItem(category['name'], iconImage='DefaultFolder.png')
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
@@ -128,7 +128,7 @@ def list_videos(data, page, plugin_params=None):
     quality_mapping = ['low_url', 'high_url', 'hd_url']
     quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
 
-    menu = []
+    page_menu = []
 
     # Make sure this value is an int, since Giant Bomb currently returns this as
     # a string.
@@ -140,11 +140,12 @@ def list_videos(data, page, plugin_params=None):
 
         if page > 0:
             url = handler.build_url(dict(page=page-1, **plugin_params))
-            menu.append(('Previous page',
-                         'Container.Update(' + url + ', replace)'))
+            page_menu.append(('Previous page',
+                              'Container.Update({0}, replace)'.format(url)))
         if (page+1) * 100 < total:
             url = handler.build_url(dict(page=page+1, **plugin_params))
-            menu.append(('Next page', 'Container.Update(' + url + ', replace)'))
+            page_menu.append(('Next page',
+                              'Container.Update({0}, replace)'.format(url)))
 
     for video in data['results']:
         name = video['name']
@@ -166,7 +167,16 @@ def list_videos(data, page, plugin_params=None):
                 'date': time.strftime('%d.%m.%Y', date),
                 })
         li.setProperty('IsPlayable', 'true')
-        li.addContextMenuItems(menu)
+
+        if video.get('youtube_id'):
+            youtube_item = (
+                'Play with Youtube',
+                ('PlayMedia(plugin://plugin.video.youtube/?action=play_video' +
+                 '&videoid={0})').format(video['youtube_id']))
+            li.addContextMenuItems([youtube_item] + page_menu)
+        else:
+            li.addContextMenuItems(page_menu)
+
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=remote_url,
                                     listitem=li, totalItems=this_page)
@@ -217,8 +227,9 @@ def endurance(gb_filter):
              'The Matrix Online' ]
 
     for run in runs:
-        url = handler.build_url({ 'mode': 'videos', 'page': 'all',
-                                  'gb_filter': gb_filter + ',name:%s' % run })
+        url = handler.build_url({
+                'mode': 'videos', 'page': 'all',
+                'gb_filter': '{0},name:{1}'.format(gb_filter, run) })
         li = xbmcgui.ListItem(run, iconImage='DefaultFolder.png')
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True)
