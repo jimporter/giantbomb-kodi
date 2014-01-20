@@ -25,6 +25,10 @@ class RSSParser(object):
 
     @property
     def image(self):
+        """Get the feed's image.
+
+        :return: The feed's image as a dict or None if no image exists."""
+
         image = self._tree.find('channel/image')
         if image:
             return {
