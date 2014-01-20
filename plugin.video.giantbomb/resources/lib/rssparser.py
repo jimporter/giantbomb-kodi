@@ -1,5 +1,5 @@
 import urllib2
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree
 
 namespaces = { 'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd' }
 
@@ -12,7 +12,7 @@ class RSSParser(object):
         :param url: The URL for the RSS feed."""
 
         f = urllib2.urlopen(url)
-        self._tree = ET.parse(f)
+        self._tree = xml.etree.ElementTree.parse(f)
         f.close()
 
     @property
@@ -22,6 +22,18 @@ class RSSParser(object):
         :return: The feed's title or None if no title exists."""
 
         return self._try_get_text(self._tree, 'channel/title')
+
+    @property
+    def image(self):
+        image = self._tree.find('channel/image')
+        if image:
+            return {
+                'title':  self._try_get_text(image, 'title'),
+                'url':    self._try_get_text(image, 'url'),
+                'link':   self._try_get_text(image, 'link'),
+                'width':  self._try_get_text(image, 'width'),
+                'height': self._try_get_text(image, 'height'),
+                }
 
     @property
     def items(self):

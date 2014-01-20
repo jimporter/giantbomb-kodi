@@ -1,7 +1,9 @@
 from resources.lib.giantbomb import GiantBomb
 from resources.lib.requesthandler import RequestHandler
 from resources.lib.rssparser import RSSParser
+from resources.lib.urlcache import URLCache
 
+import os.path
 import re
 import sys
 import time
@@ -81,11 +83,11 @@ def index(content_type='video'):
     """
 
     if content_type == 'video':
-        categories()
+        list_categories()
     elif content_type == 'audio':
-        podcasts()
+        list_podcasts()
 
-def categories():
+def list_categories():
     """Display the list of video categories from Giant Bomb."""
 
     if my_addon.getSetting('first_run') == 'true':
@@ -263,38 +265,58 @@ def search(query=None, page='0'):
     list_videos(data, page, { 'mode': 'search', 'query': query })
     xbmcplugin.endOfDirectory(addon_id)
 
-def podcasts():
+podcasts = [
+    { 'id': 'bombcast',
+      'name': 'Giant Bombcast',
+      'url': 'http://www.giantbomb.com/podcast-xml/giant-bombcast/' },
+    { 'id': '8-4-play',
+      'name': '8-4 Play',
+      'url': 'http://eightfour.libsyn.com/rss' },
+    { 'id': 'gaming-minute',
+      'name': 'Giant Bomb Gaming Minute',
+      'url': 'http://www.giantbomb.com/podcast-xml/' +
+      'giant-bomb-gaming-minute/' },
+    { 'id': 'interview-dumptruck',
+      'name': "Giant Bomb's Interview Dumptruck",
+      'url': 'http://www.giantbomb.com/podcast-xml/interview-dumptruck/' },
+    { 'id': 'bombin-the-am',
+      'name': "Bombin' the A.M. With Scoops and the Wolf",
+      'url': 'http://www.giantbomb.com/podcast-xml/' +
+      'bombin-the-a-m-with-scoops-and-the-wolf/' },
+    ]
+
+def list_podcasts():
     """Display the list of podcasts from Giant Bomb."""
 
-    podcasts = [
-        { 'name': 'Giant Bombcast',
-          'url': 'http://www.giantbomb.com/podcast-xml/giant-bombcast/' },
-        { 'name': '8-4 Play',
-          'url': 'http://eightfour.libsyn.com/rss' },
-        { 'name': 'Giant Bomb Gaming Minute',
-          'url': 'http://www.giantbomb.com/podcast-xml/' +
-                 'giant-bomb-gaming-minute/' },
-        { 'name': "Giant Bomb's Interview Dumptruck",
-          'url': 'http://www.giantbomb.com/podcast-xml/interview-dumptruck/' },
-        { 'name': "Bombin' the A.M. With Scoops and the Wolf",
-          'url': 'http://www.giantbomb.com/podcast-xml/' +
-                 'bombin-the-a-m-with-scoops-and-the-wolf/' },
-        ]
-
+    cache = URLCache(os.path.join(
+            xbmc.translatePath(my_addon.getAddonInfo('profile')), 'images'))
     for cast in podcasts:
-        url = handler.build_url({ 'mode': 'podcast', 'url': cast['url'] })
-        li = xbmcgui.ListItem(cast['name'], iconImage='DefaultFolder.png')
+        url = handler.build_url({ 'mode': 'podcast', 'podcast_id': cast['id'] })
+        image = cache.get(cast['id'], '')
+        li = xbmcgui.ListItem(cast['name'], thumbnailImage=image,
+                              iconImage='DefaultFolder.png')
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True)
     xbmcplugin.endOfDirectory(addon_id)
 
 @handler.page
-def podcast(url):
+def podcast(podcast_id):
     """Display the list of individual podcast items from a specific podcast.
 
-    :param url: The URL to the podcast's RSS feed."""
+    :param podcast_id: The ID of the podcast."""
 
-    rss = RSSParser(url)
+    # "Hi I'm Guido van Rossum! I didn't want to implement a decent find
+    # function for lists; just use a generator instead!" "Yeah ok Guido."
+    cast = next((x for x in podcasts if x['id'] == podcast_id))
+
+    rss = RSSParser(cast['url'])
+
+    # Save the podcast's image
+    image = rss.image
+    if image and 'url' in image:
+        cache = URLCache(os.path.join(
+                xbmc.translatePath(my_addon.getAddonInfo('profile')), 'images'))
+        cache[podcast_id] = image['url']
 
     for item in rss.items:
         date = time.strptime(re.sub(r' (\w{3}|[-+]\d{4})$', '', item['date']),
