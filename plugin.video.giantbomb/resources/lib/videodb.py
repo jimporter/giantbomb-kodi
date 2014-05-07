@@ -98,8 +98,8 @@ class VideoDB(object):
 
         try:
             self._cursor.execute(
-                'select strVideoCodec, fVideoAspect, iVideoHeight, ' +
-                'iVideoWidth, iVideoDuration from streamdetails ' +
+                'select strVideoCodec, fVideoAspect, iVideoWidth, ' +
+                'iVideoHeight, iVideoDuration from streamdetails ' +
                 'where idFile=? and iStreamType=0',
                 (fileid,))
             video = self._cursor.fetchone()
@@ -125,6 +125,6 @@ class VideoDB(object):
                                 'duration': video[4] }
         if audio:
             result['audio'] = { 'codec': audio[0], 'channels': audio[1],
-                                'language': [2] }
+                                'language': audio[2] }
 
         return result
