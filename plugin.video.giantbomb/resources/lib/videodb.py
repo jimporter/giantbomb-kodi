@@ -5,12 +5,21 @@ class VideoDB(object):
     """A wrapper to the XBMC video database. Technically, we're not supposed to
     do this, but XBMC won't give us the info any other way."""
 
-    def __init__(self, path='special://profile/Database/MyVideos75.db'):
+    def __init__(self, path=None):
         """Create a new instance of the video DB wrapper and get a cursor for
         the database.
 
         :param path: The path to the video database
         """
+
+        if path is None:
+            if xbmc.__version__ == '1.4':
+                path = 'special://profile/Database/MyVideos75.db'
+            elif xbmc.__version__ == '2.14.0':
+                path = 'special://profile/Database/MyVideos78.db'
+            else:
+                raise Exception('Unknown XBMC Python version: ' +
+                                xbmc.__version__)
 
         realpath = xbmc.translatePath(path)
         self._conn = sqlite3.connect(realpath)
