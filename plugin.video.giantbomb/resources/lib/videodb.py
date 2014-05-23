@@ -13,7 +13,7 @@ class VideoDB(object):
         """
 
         if path is None:
-            if xbmc.__version__ == '1.4':
+            if xbmc.__version__ == '2.0':
                 path = 'special://profile/Database/MyVideos75.db'
             elif xbmc.__version__ == '2.14.0':
                 path = 'special://profile/Database/MyVideos78.db'
