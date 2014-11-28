@@ -26,8 +26,8 @@ class TestGiantBombAPI(unittest.TestCase):
         self.assertEquals(data['number_of_page_results'], len(data['results']))
 
         for video in data['results']:
-            self.assertIsInstance(video['name'], str)
-            self.assertIsInstance(video['deck'], str)
+            self.assertIsInstance(video['name'], basestring)
+            self.assertIsInstance(video['deck'], basestring)
             self.assertIsInstance(video['length_seconds'], int)
 
             self.assertIsInstance(video['publish_date'], str)
