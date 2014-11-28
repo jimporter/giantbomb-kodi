@@ -262,14 +262,14 @@ def search(query=None, page='0'):
 
     page = int(page)
 
-    if query is None:
+    if not query:
         keyboard = xbmc.Keyboard('', 'Search', False)
         keyboard.doModal()
         if keyboard.isConfirmed():
             query = keyboard.getText()
-        else:
-            xbmc.executebuiltin('Action(ParentDir)')
-            return
+    if not query:
+        xbmc.executebuiltin('Action(ParentDir)')
+        return
 
     data = gb.query('search', { 'resources': 'video', 'query': query,
                                  'offset': page*100 })
