@@ -1,5 +1,6 @@
 XBMC_PROFILE?=$(HOME)/.xbmc
 ADDON_NAME=plugin.video.giantbomb
+ADDON_VERSION=4.1.1
 ADDON_INSTALL_DIR=$(XBMC_PROFILE)/addons/$(ADDON_NAME)
 
 .PHONY: uninstall-dev
@@ -12,7 +13,7 @@ install-dev: uninstall-dev
 
 .PHONY: package
 package:
-	zip $(ADDON_NAME).zip $(ADDON_NAME)
+	zip -r $(ADDON_NAME)-$(ADDON_VERSION).zip $(ADDON_NAME)
 
 .PHONY: test
 test:

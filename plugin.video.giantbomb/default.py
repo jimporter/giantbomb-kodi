@@ -173,9 +173,17 @@ def list_videos(data, page, plugin_params=None):
             # XXX: This assumes the URL already has a query string!
             remote_url += '&' + urllib.urlencode({ 'api_key': gb.api_key })
 
+        # XXX: Work around https URLs in the Latest videos section
+        remote_url = re.sub(r'^https:', 'http:', remote_url)
+
         fileid = videodb.get_file_id(remote_url)
         name = video['name']
         date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
+
+        # XXX: Work around broken thumbnail URLs in the Latest videos section
+        thumb = video['image']['super_url']
+        if thumb[0] == '/':
+            thumb = 'http://static.giantbomb.com' + thumb
 
         li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
                               thumbnailImage=video['image']['super_url'])

@@ -17,6 +17,8 @@ class VideoDB(object):
                 path = 'special://profile/Database/MyVideos75.db'
             elif xbmc.__version__ == '2.14.0':
                 path = 'special://profile/Database/MyVideos78.db'
+            elif xbmc.__version__ == '2.19.0':
+                path = 'special://profile/Database/MyVideos90.db'
             else:
                 raise Exception('Unknown XBMC Python version: ' +
                                 xbmc.__version__)
