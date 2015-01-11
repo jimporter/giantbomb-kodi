@@ -43,4 +43,10 @@ make package
 License
 -------
 
-This library is licensed under the GPL, version 3.
+This add-on is licensed under the GPL, version 3.
+
+Credits
+-------
+
+Image files (and a few small vestiges of code) courtesy of
+[Whiskey Media](https://github.com/WhiskeyMedia/xbmc).
