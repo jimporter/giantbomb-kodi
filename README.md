@@ -1,8 +1,13 @@
-Giant Bomb for XBMC
+Giant Bomb for Kodi
 ===================
 
-This is an add-on for XBMC to show the latest and greatest videos from Giant
-Bomb dot com (a website about video games, and a video game website).
+This is an add-on for Kodi (aka XBMC) to show the latest and greatest videos
+from Giant Bomb dot com.
+
+Giant Bomb dot com? What's that?
+--------------------------------
+
+It's a website. About video games.
 
 Development
 -----------
@@ -19,7 +24,7 @@ make uninstall-dev
 Testing
 -------
 
-Tests are located in `tests/` (big surprise there). You can (and should!) run
+Tests are located in `test/` (big surprise there). You can (and should!) run
 them from `make`:
 
 ```
@@ -34,3 +39,8 @@ To package the add-on into a .zip file for release, just run:
 ```
 make package
 ```
+
+License
+-------
+
+This library is licensed under the GPL, version 3.
