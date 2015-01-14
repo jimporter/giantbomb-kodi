@@ -1,7 +1,7 @@
-[![GitHub release][release-image]][release-link]
-
 Giant Bomb for Kodi
 ===================
+
+[![GitHub release][release-image]][release-link]
 
 This is an add-on for Kodi (aka XBMC) to show the latest and greatest videos
 from Giant Bomb dot com.
