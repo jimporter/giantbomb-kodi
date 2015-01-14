@@ -9,9 +9,9 @@
     <setting id="api_key" type="text" default="" option="hidden" label="API Key"
              visible="false" />
     <setting type="action"
-             action="RunScript(plugin.video.giantbomb, 0, mode=link_account)"
+             action="RunPlugin(plugin://plugin.video.giantbomb?mode=link_account)"
              label="Link Account" visible="eq(-1,)" />
     <setting type="action"
-             action="RunScript(plugin.video.giantbomb, 0, mode=unlink_account)"
+             action="RunPlugin(plugin://plugin.video.giantbomb?mode=unlink_account)"
              label="Unlink Account" visible="!eq(-2,)" />
 </settings>
