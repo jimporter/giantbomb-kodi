@@ -1,3 +1,5 @@
+[![GitHub release][release-image]][release-link]
+
 Giant Bomb for Kodi
 ===================
 
@@ -50,3 +52,6 @@ Credits
 
 Image files (and a few small vestiges of code) courtesy of
 [Whiskey Media](https://github.com/WhiskeyMedia/xbmc).
+
+[release-image]: https://img.shields.io/github/release/jimporter/giantbomb-kodi.svg?style=flat
+[release-link]: https://github.com/jimporter/giantbomb-kodi/releases
