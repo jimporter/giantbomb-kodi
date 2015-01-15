@@ -59,3 +59,5 @@ class RequestHandler(object):
             self._default_mode_mapping(**params)
         elif mode in self._mode_mapping:
             self._mode_mapping[mode](**params)
+        else:
+            raise Exception('unknown mode: ' + mode)
