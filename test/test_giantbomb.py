@@ -35,3 +35,14 @@ class TestGiantBombAPI(unittest.TestCase):
 
             self.assertIsInstance(video['image']['super_url'], str)
             self.assertIsInstance(video['high_url'], str)
+
+    def test_latest(self):
+        default = self.gb.query('videos')
+        desc = self.gb.query('videos', { 'sort': 'publish_date:desc' })
+
+        for expectedvid, actualvid in zip(default['results'], desc['results']):
+            for key, expected in expectedvid['image'].iteritems():
+                actual = actualvid['image'][key]
+                if actual[0] == '/':
+                    actual = 'http://static.giantbomb.com' + actual
+                self.assertEquals(actual, expected)
