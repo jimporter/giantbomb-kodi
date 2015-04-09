@@ -186,7 +186,7 @@ def list_videos(data, page, plugin_params=None):
             thumb = 'http://static.giantbomb.com' + thumb
 
         li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
-                              thumbnailImage=video['image']['super_url'])
+                              thumbnailImage=thumb)
         li.setInfo('video', infoLabels={
                 'title': name,
                 'plot': video['deck'],

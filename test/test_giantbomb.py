@@ -45,4 +45,6 @@ class TestGiantBombAPI(unittest.TestCase):
                 actual = actualvid['image'][key]
                 if actual[0] == '/':
                     actual = 'http://static.giantbomb.com' + actual
+                if expected[0] == '/':
+                    expected = 'http://static.giantbomb.com' + expected
                 self.assertEquals(actual, expected)
