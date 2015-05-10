@@ -2,6 +2,7 @@ Giant Bomb for Kodi
 ===================
 
 [![GitHub release][release-image]][release-link]
+[![GitHub downloads][downloads-image]][release-link]
 
 This is an add-on for Kodi (aka XBMC) to show the latest and greatest videos
 from Giant Bomb dot com.
@@ -53,5 +54,6 @@ Credits
 Image files (and a few small vestiges of code) courtesy of
 [Whiskey Media](https://github.com/WhiskeyMedia/xbmc).
 
-[release-image]: https://img.shields.io/github/release/jimporter/giantbomb-kodi.svg?style=flat
-[release-link]: https://github.com/jimporter/giantbomb-kodi/releases
+[release-image]: https://img.shields.io/github/release/jimporter/giantbomb-kodi.svg
+[downloads-image]: https://img.shields.io/github/downloads/jimporter/giantbomb-kodi/latest/total.svg
+[release-link]: https://github.com/jimporter/giantbomb-kodi/releases/latest
