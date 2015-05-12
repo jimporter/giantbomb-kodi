@@ -1,3 +1,15 @@
+[B]4.2.0[/B]
+- Use a Kodi-compliant method for showing watch history
+
+[B]4.1.2[/B]
+- Fix thumbnails in the latest videos section
+
+[B]4.1.1[/B]
+- Fix support for Kodi 14
+
+[B]4.1.0[/B]
+- Show watch history for videos
+
 [B]4.0.0[/B]
 - Display more metadata for videos
 - Add podcast support
