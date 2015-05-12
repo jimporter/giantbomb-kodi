@@ -167,8 +167,13 @@ def list_videos(data, page, plugin_params=None):
             'mode': 'play_video', 'url': video['api_detail_url']
         })
 
+        # XXX: Work around broken thumbnail URLs in the Latest videos section
+        thumb = video['image']['super_url']
+        if thumb[0] == '/':
+            thumb = 'http://static.giantbomb.com' + thumb
+
         li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
-                              thumbnailImage=video['image']['super_url'])
+                              thumbnailImage=thumb)
         li.addStreamInfo('video', { 'duration': duration })
         li.setInfo('video', infoLabels={
                 'title': name,
