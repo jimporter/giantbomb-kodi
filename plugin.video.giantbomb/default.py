@@ -22,7 +22,6 @@ def update_api_key(api_key):
 gb = GiantBomb(my_addon.getSetting('api_key') or None, update_api_key)
 handler = RequestHandler(sys.argv[0])
 
-xbmcplugin.setContent(addon_id, 'movies')
 xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
 
 @handler.page
@@ -141,9 +140,6 @@ def list_videos(data, page, plugin_params=None):
     :param plugin_params: An optional dict of parameters to pass back to the
                           plugin; used for navigating between pages"""
 
-    quality_mapping = ['low_url', 'high_url', 'hd_url']
-    quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
-
     page_menu = []
 
     # Make sure this value is an int, since Giant Bomb currently returns this as
@@ -167,16 +163,12 @@ def list_videos(data, page, plugin_params=None):
         name = video['name']
         date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
         duration = video['length_seconds']
-
-        # Build the URL for playing the video
-        remote_url = video.get(quality, video['high_url'])
-        if quality == 'hd_url' and 'hd_url' in video:
-            # XXX: This assumes the URL already has a query string!
-            remote_url += '&' + urllib.urlencode({ 'api_key': gb.api_key })
+        url = handler.build_url({
+            'mode': 'play_video', 'url': video['api_detail_url']
+        })
 
         li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
-                              thumbnailImage=video['image']['super_url'],
-                              path=remote_url)
+                              thumbnailImage=video['image']['super_url'])
         li.addStreamInfo('video', { 'duration': duration })
         li.setInfo('video', infoLabels={
                 'title': name,
@@ -195,7 +187,7 @@ def list_videos(data, page, plugin_params=None):
             li.addContextMenuItems(page_menu)
 
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
-        xbmcplugin.addDirectoryItem(handle=addon_id, url=remote_url,
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, totalItems=this_page)
 
 @handler.page
@@ -276,6 +268,31 @@ def search(query=None, page='0'):
     list_videos(data, page, { 'mode': 'search', 'query': query })
     xbmcplugin.endOfDirectory(addon_id)
 
+@handler.page
+def play_video(url):
+    """Start playing a particular video file.
+
+    :param url: The API detail URL for the video"""
+
+    try:
+        # XXX: We already found the actual video URL when we got the API URL.
+        # Maybe we should cache it so that video playing loads faster?
+        video = gb.fetch(url)['results']
+
+        quality_mapping = ['low_url', 'high_url', 'hd_url']
+        quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
+
+        video_url = video.get(quality, video['high_url'])
+        if quality == 'hd_url' and 'hd_url' in video:
+            # XXX: This assumes the URL already has a query string!
+            video_url += '&' + urllib.urlencode({ 'api_key': gb.api_key })
+
+        li = xbmcgui.ListItem(path=video_url)
+        xbmcplugin.setResolvedUrl(addon_id, True, li)
+    except Exception as e:
+        li = xbmcgui.ListItem()
+        xbmcplugin.setResolvedUrl(addon_id, False, li)
+
 podcasts = [
     { 'id': 'bombcast',
       'name': 'Giant Bombcast',
@@ -332,7 +349,7 @@ def podcast(podcast_id):
     for item in rss.items:
         date = time.strptime(re.sub(r' (\w{3}|[-+]\d{4})$', '', item['date']),
                              '%a, %d %b %Y %H:%M:%S')
-        url = handler.build_url({ 'mode': 'play', 'url': item['url'] })
+        url = handler.build_url({ 'mode': 'play_audio', 'url': item['url'] })
 
         li = xbmcgui.ListItem(item['title'], iconImage='DefaultVideo.png',
                               thumbnailImage=item['image'] or '',
@@ -353,8 +370,8 @@ def podcast(podcast_id):
     xbmcplugin.endOfDirectory(addon_id)
 
 @handler.page
-def play(url):
-    """Start playing a particular file.
+def play_audio(url):
+    """Start playing a particular audio file.
 
     :param url: The URL to the file."""
 
