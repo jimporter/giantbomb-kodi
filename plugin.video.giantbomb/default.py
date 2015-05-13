@@ -112,9 +112,9 @@ def list_categories():
         name = category['name']
         mode = 'endurance' if category['id'] == 5 else 'videos'
         url = handler.build_url({
-                'mode': mode,
-                'gb_filter': 'video_type:{0}'.format(category['id'])
-                })
+            'mode': mode,
+            'gb_filter': 'video_type:{0}'.format(category['id'])
+        })
         li = xbmcgui.ListItem(category['name'], iconImage='DefaultFolder.png')
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
@@ -140,7 +140,9 @@ def list_videos(data, page, plugin_params=None):
     :param plugin_params: An optional dict of parameters to pass back to the
                           plugin; used for navigating between pages"""
 
-    page_menu = []
+    page_menu = [
+        (xbmc.getLocalizedString(13347), 'Action(Queue)')
+    ]
 
     # Make sure this value is an int, since Giant Bomb currently returns this as
     # a string.
@@ -158,6 +160,8 @@ def list_videos(data, page, plugin_params=None):
             url = handler.build_url(dict(page=page+1, **plugin_params))
             page_menu.append(('Next page',
                               'Container.Update({0}, replace)'.format(url)))
+
+    page_menu.append(('Toggle watched', 'Action(ToggleWatched)'))
 
     for video in data['results']:
         name = video['name']
