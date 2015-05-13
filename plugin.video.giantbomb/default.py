@@ -361,21 +361,19 @@ def podcast(podcast_id):
         url = handler.build_url({ 'mode': 'play_audio', 'url': item['url'] })
 
         li = xbmcgui.ListItem(item['title'], iconImage='DefaultVideo.png',
-                              thumbnailImage=item['image'] or '',
-                              path=url)
+                              thumbnailImage=item['image'] or '', path=url)
         li.setProperty('IsPlayable', 'true')
         li.setInfo('music', infoLabels={
-                'title': item['title'],
-                'artist': item['author'],
-                'album': rss.title,
-                'year': date.tm_year,
-                'genre': 'Podcast',
-                'comment': item['description'],
-                'duration': item['length'],
-                'date': time.strftime('%d.%m.%Y', date),
-                })
-        xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
-                                    listitem=li)
+            'title': item['title'],
+            'artist': item['author'],
+            'album': rss.title,
+            'year': date.tm_year,
+            'genre': 'Podcast',
+            'comment': item['description'],
+            'duration': item['length'],
+            'date': time.strftime('%d.%m.%Y', date),
+        })
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li)
     xbmcplugin.endOfDirectory(addon_id)
 
 @handler.page
