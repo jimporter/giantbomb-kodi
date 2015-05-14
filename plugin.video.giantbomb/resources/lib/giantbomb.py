@@ -114,3 +114,28 @@ class GiantBomb(object):
         if status == 1:
             return data
         raise APIError(status)
+
+_realnames = {
+    'alex':          'Alex Navarro',
+    'brad':          'Brad Shoemaker',
+    'danryckert':    'Dan Ryckert',
+    'drewbert':      'Drew Scanlon',
+    'jeff':          'Jeff Gerstmann',
+    'marino':        "Brad 'Marino' Lynch",
+    'mattbodega':    'Matt Kessler',
+    'patrickklepek': 'Patrick Klepek',
+    'perryvandell':  'Perry Vandell',
+    'rorie':         'Matt Rorie',
+    'ryan':          'Ryan Davis',
+    'snide':         'Dave Snider',
+    'unastrike':     'Jason Oestreicher',
+    'vinny':         'Vinny Caravella',
+    'zacminor':      'Zac Minor',
+}
+def map_usernames(names):
+    """Map the Giant Bomb crew's usernames to their real names.
+
+    :param names: A string (separated by ', ') of usernames
+    :return: A string of real names"""
+
+    return ', '.join(_realnames.get(i, i) for i in names.split(', '))

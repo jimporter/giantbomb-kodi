@@ -1,4 +1,4 @@
-from resources.lib.giantbomb import GiantBomb
+from resources.lib.giantbomb import GiantBomb, map_usernames
 from resources.lib.requesthandler import RequestHandler
 from resources.lib.rssparser import RSSParser
 from resources.lib.urlcache import URLCache
@@ -180,10 +180,13 @@ def list_videos(data, page, plugin_params=None):
                               thumbnailImage=thumb)
         li.addStreamInfo('video', { 'duration': duration })
         li.setInfo('video', infoLabels={
-                'title': name,
-                'plot': video['deck'],
-                'date': time.strftime('%d.%m.%Y', date),
-                })
+            'title': name,
+            'plot': video['deck'],
+            'genre': video['video_type'],
+            'date': time.strftime('%d.%m.%Y', date),
+            'year': time.strftime('%Y', date),
+            'director': map_usernames(video['user']),
+        })
         li.setProperty('IsPlayable', 'true')
 
         if video.get('youtube_id'):
