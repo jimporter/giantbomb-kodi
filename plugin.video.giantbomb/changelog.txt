@@ -1,3 +1,6 @@
+[B]4.2.1[/B]
+- Fix a crash when videos have no uploader listed
+
 [B]4.2.0[/B]
 - Use a Kodi-compliant method for showing watch history
 - Display even more metadata for videos
