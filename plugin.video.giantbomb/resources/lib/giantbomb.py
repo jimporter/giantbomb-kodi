@@ -138,4 +138,6 @@ def map_usernames(names):
     :param names: A string (separated by ', ') of usernames
     :return: A string of real names"""
 
+    if not names:
+        return None
     return ', '.join(_realnames.get(i, i) for i in names.split(', '))
