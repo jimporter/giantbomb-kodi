@@ -131,37 +131,55 @@ def list_categories():
 
     xbmcplugin.endOfDirectory(addon_id)
 
-def list_videos(data, page, plugin_params=None):
+def list_videos(data, page, gb_filter=None):
     """Given a JSON response from Giant Bomb with a bunch of videos, add them to
     XBMC.
 
     :param data: The JSON response
     :param page: The 0-offset page number, or 'all' to show all pages
-    :param plugin_params: An optional dict of parameters to pass back to the
-                          plugin; used for navigating between pages"""
+    :param gb_filter: An optional filter to use for fetching more pages from
+                      the API"""
 
-    page_menu = [
-        (xbmc.getLocalizedString(13347), 'Action(Queue)')
-    ]
+    plugin_params = {'mode': 'videos'}
+    if gb_filter:
+        plugin_params['gb_filter'] = gb_filter
 
     # Make sure this value is an int, since Giant Bomb currently returns this as
     # a string.
     total = int(data['number_of_total_results'])
     if page == 'all':
-        this_page = total
+        page_total = total
+        total_pages = 1
     else:
-        this_page = len(data['results'])
+        page_total = len(data['results'])
+        total_pages = (total + 99) / 100
 
-        if page > 0:
-            url = handler.build_url(dict(page=page-1, **plugin_params))
-            page_menu.append(('Previous page',
-                              'Container.Update({0}, replace)'.format(url)))
-        if (page+1) * 100 < total:
-            url = handler.build_url(dict(page=page+1, **plugin_params))
-            page_menu.append(('Next page',
-                              'Container.Update({0}, replace)'.format(url)))
-
+    page_menu = [
+        (xbmc.getLocalizedString(13347), 'Action(Queue)')
+    ]
+    if total_pages > 1:
+        url = handler.build_url({
+            'mode': 'goto_page', 'gb_filter': gb_filter, 'current_page': page,
+            'total_pages': total_pages
+        })
+        page_menu.append((
+            'Go to Page...', 'Container.Update({0}, replace)'.format(url)
+        ))
     page_menu.append(('Toggle watched', 'Action(ToggleWatched)'))
+
+    if page + 1 < total_pages:
+        page_total += 1
+    if page > 0:
+        page_total += 1
+
+        url = handler.build_url(dict(
+            page=page - 1, update_listing=True, **plugin_params
+        ))
+        li = xbmcgui.ListItem('Previous Page ({0})'.format(page),
+                              iconImage='DefaultFolder.png')
+        li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
+                                    isFolder=True, totalItems=page_total)
 
     for video in data['results']:
         name = video['name']
@@ -199,11 +217,35 @@ def list_videos(data, page, plugin_params=None):
             li.addContextMenuItems(page_menu)
 
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
-        xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
-                                    listitem=li, totalItems=this_page)
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
+                                    totalItems=page_total)
+
+    if page + 1 < total_pages:
+        url = handler.build_url(dict(
+            page=page + 1, update_listing=True, **plugin_params
+        ))
+
+        li = xbmcgui.ListItem('Next Page ({0})'.format(page + 2),
+                              iconImage='DefaultFolder.png')
+        li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
+                                    isFolder=True, totalItems=page_total)
 
 @handler.page
-def videos(gb_filter=None, page='0'):
+def goto_page(current_page, total_pages, gb_filter=None):
+    dialog = xbmcgui.Dialog()
+    while True:
+        page = int(dialog.numeric(
+            0, 'Select Page (1 - {0})'.format(total_pages),
+            str(int(current_page) + 1)
+        )) - 1
+        if page >= 0 and page < total_pages:
+            break
+
+    videos(gb_filter, page, update_listing=True)
+
+@handler.page
+def videos(gb_filter=None, page='0', update_listing='False'):
     """List the videos satisfying some filter criteria.
 
     :param gb_filter: A filter to send to the Giant Bomb API to filter the video
@@ -212,14 +254,12 @@ def videos(gb_filter=None, page='0'):
                  pages"""
 
     api_params = { 'sort': 'publish_date:desc' }
-    plugin_params = { 'mode': 'videos' }
-
     if gb_filter:
-        api_params['filter'] = plugin_params['gb_filter'] = gb_filter
+        api_params['filter'] = gb_filter
 
     if page == 'all':
         data = gb.query('videos', api_params)
-        list_videos(data, page, plugin_params)
+        list_videos(data, page, gb_filter)
         # Make sure this value is an int, since Giant Bomb currently returns
         # this as a string.
         total = int(data['number_of_total_results'])
@@ -227,14 +267,14 @@ def videos(gb_filter=None, page='0'):
         for offset in range(100, total, 100):
             api_params['offset'] = offset
             data = gb.query('videos', api_params)
-            list_videos(data, page, plugin_params)
+            list_videos(data, page, gb_filter)
     else:
         page = int(page)
         api_params['offset'] = page * 100
         data = gb.query('videos', api_params)
-        list_videos(data, page, plugin_params)
+        list_videos(data, page, gb_filter)
 
-    xbmcplugin.endOfDirectory(addon_id)
+    xbmcplugin.endOfDirectory(addon_id, updateListing=bool(update_listing))
 
 @handler.page
 def endurance(gb_filter):
@@ -249,15 +289,16 @@ def endurance(gb_filter):
 
     for run in runs:
         url = handler.build_url({
-                'mode': 'videos', 'page': 'all',
-                'gb_filter': '{0},name:{1}'.format(gb_filter, run) })
+            'mode': 'videos', 'page': 'all',
+            'gb_filter': '{0},name:{1}'.format(gb_filter, run)
+        })
         li = xbmcgui.ListItem(run, iconImage='DefaultFolder.png')
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True)
     xbmcplugin.endOfDirectory(addon_id)
 
 @handler.page
-def search(query=None, page='0'):
+def search(query=None, page='0', update_listing='False'):
     """Show some search results from the Giant Bomb API, or prompt the user to
     enter a search query.
 
@@ -278,7 +319,7 @@ def search(query=None, page='0'):
     data = gb.query('search', { 'resources': 'video', 'query': query,
                                  'offset': page*100 })
     list_videos(data, page, { 'mode': 'search', 'query': query })
-    xbmcplugin.endOfDirectory(addon_id)
+    xbmcplugin.endOfDirectory(addon_id, updateListing=bool(update_listing))
 
 @handler.page
 def play_video(url):
@@ -323,7 +364,7 @@ podcasts = [
       'name': "Bombin' the A.M. With Scoops and the Wolf",
       'url': 'http://www.giantbomb.com/podcast-xml/' +
       'bombin-the-a-m-with-scoops-and-the-wolf/' },
-    ]
+]
 
 def list_podcasts():
     """Display the list of podcasts from Giant Bomb."""
