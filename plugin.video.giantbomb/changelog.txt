@@ -1,3 +1,7 @@
+[B]4.3.0[/B]
+- Improve inter-page navigation
+- Add an advanced option to disable HTTPS (needed for older Android devices)
+
 [B]4.2.1[/B]
 - Fix a crash when videos have no uploader listed
 
