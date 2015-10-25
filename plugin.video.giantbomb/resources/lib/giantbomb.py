@@ -28,18 +28,22 @@ class APIError(Exception):
 class GiantBomb(object):
     """A simple interface to the Giant Bomb API."""
 
-    api_path = 'https://www.giantbomb.com/api'
+    api_path_template = '{protocol}://www.giantbomb.com/api'
     default_api_key = 'fa96542d69b4af7f31c2049ace5d89e84e225bef'
 
-    def __init__(self, api_key=None, on_update_api_key=None):
+    def __init__(self, api_key=None, on_update_api_key=None, https=True):
         """Create a new instance of the Giant Bomb API requester.
 
         :param api_key: The API key to use (or None to use the default)
         :param on_update_api_key: A function to call if the API key is changed
+        :param https: True if we should use HTTPS, False otherwise
         """
 
         self.api_key = api_key or self.default_api_key
         self.on_update_api_key = on_update_api_key
+        self.api_path = self.api_path_template.format(
+            protocol='https' if https else 'http'
+        )
 
     def get_api_key(self, link_code):
         """Get the API key from the site given the link code.

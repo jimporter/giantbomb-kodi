@@ -19,7 +19,8 @@ my_addon = xbmcaddon.Addon('plugin.video.giantbomb')
 def update_api_key(api_key):
     my_addon.setSetting('api_key', api_key)
 
-gb = GiantBomb(my_addon.getSetting('api_key') or None, update_api_key)
+gb = GiantBomb(my_addon.getSetting('api_key') or None, update_api_key,
+               my_addon.getSetting('use_https'))
 handler = RequestHandler(sys.argv[0])
 
 xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
