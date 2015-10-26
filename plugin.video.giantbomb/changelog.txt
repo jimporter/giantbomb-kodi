@@ -1,3 +1,6 @@
+[B]4.3.1[/B]
+- Fix HTTPS-disabling
+
 [B]4.3.0[/B]
 - Improve inter-page navigation
 - Add an advanced option to disable HTTPS (needed for older Android devices)
