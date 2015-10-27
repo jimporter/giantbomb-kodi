@@ -73,34 +73,30 @@ class GiantBomb(object):
         full_query = { 'api_key': self.api_key, 'format': format }
         if query:
             full_query.update(query)
-        try:
-            return self._do_fetch(self.api_path + '/' + resource + '?' +
-                                  urllib.urlencode(full_query))
-        except APIError as e:
-            if retry and e.status == 100:
-                self._reset_api_key()
-                return self.query(resource, query, format, retry=False)
-            raise
 
-    def fetch(self, url, format='json', retry=True):
+        return self.fetch('{base}/{resource}?{query}'.format(
+            base=self.api_path,
+            resource=resource,
+            query=urllib.urlencode(full_query),
+        ), retry=retry)
+
+    def fetch(self, url, retry=True):
         """Fetch a pre-built URL from the Giant Bomb API.
 
         :param url: The URL to fetch
-        :param format: The format to receive the response in
         :param retry: True if we should retry the query if the API key is bad
         :return: A dict with the response data from the API"""
 
-        query = { 'api_key': self.api_key, 'format': format }
         try:
-            return self._do_fetch(url + '?' + urllib.urlencode(query))
+            return self._do_fetch(url)
         except APIError as e:
             if retry and e.status == 100:
                 self._reset_api_key()
-                return self.fetch(url, format, retry=False)
+                return self._do_fetch(url)
             raise
 
     def _reset_api_key(self):
-        """Reset the API key (e.g. when the API tells us our key is bad."""
+        """Reset the API key (e.g. when the API tells us our key is bad)."""
 
         self.api_key = self.default_api_key
         if callable(self.on_update_api_key):

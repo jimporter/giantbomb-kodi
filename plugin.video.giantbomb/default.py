@@ -187,7 +187,7 @@ def list_videos(data, page, gb_filter=None):
         date = time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
         duration = video['length_seconds']
         url = handler.build_url({
-            'mode': 'play_video', 'url': video['api_detail_url']
+            'mode': 'play_video', 'video_id': video['id']
         })
 
         # XXX: Work around broken thumbnail URLs in the Latest videos section
@@ -323,7 +323,7 @@ def search(query=None, page='0', update_listing='False'):
     xbmcplugin.endOfDirectory(addon_id, updateListing=bool(update_listing))
 
 @handler.page
-def play_video(url):
+def play_video(video_id):
     """Start playing a particular video file.
 
     :param url: The API detail URL for the video"""
@@ -331,7 +331,7 @@ def play_video(url):
     try:
         # XXX: We already found the actual video URL when we got the API URL.
         # Maybe we should cache it so that video playing loads faster?
-        video = gb.fetch(url)['results']
+        video = gb.query('video/{0}'.format(video_id))['results']
 
         quality_mapping = ['low_url', 'high_url', 'hd_url']
         quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
