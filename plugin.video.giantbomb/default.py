@@ -164,7 +164,7 @@ def list_videos(data, page, gb_filter=None):
             'total_pages': total_pages
         })
         page_menu.append((
-            'Go to Page...', 'Container.Update({0}, replace)'.format(url)
+            'Go to page...', 'Container.Update({0}, replace)'.format(url)
         ))
     page_menu.append(('Toggle watched', 'Action(ToggleWatched)'))
 
