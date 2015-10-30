@@ -13,6 +13,8 @@ install-dev: uninstall-dev
 
 .PHONY: package
 package:
+	find . -name "*.pyc" -exec rm {} \;
+	rm -f $(ADDON_NAME)-$(ADDON_VERSION).zip
 	zip -r $(ADDON_NAME)-$(ADDON_VERSION).zip $(ADDON_NAME)
 
 .PHONY: test
