@@ -254,6 +254,8 @@ def videos(gb_filter=None, page='0', update_listing='False'):
     :param page: A 0-offset page number (as a string); or 'all' to show all
                  pages"""
 
+    update_listing = update_listing == 'True'
+
     api_params = { 'sort': 'publish_date:desc' }
     if gb_filter:
         api_params['filter'] = gb_filter
@@ -275,7 +277,7 @@ def videos(gb_filter=None, page='0', update_listing='False'):
         data = gb.query('videos', api_params)
         list_videos(data, page, gb_filter)
 
-    xbmcplugin.endOfDirectory(addon_id, updateListing=bool(update_listing))
+    xbmcplugin.endOfDirectory(addon_id, updateListing=update_listing)
 
 @handler.page
 def endurance(gb_filter):
@@ -307,6 +309,7 @@ def search(query=None, page='0', update_listing='False'):
     :param page: A 0-offset page number (as a string)"""
 
     page = int(page)
+    update_listing = update_listing == 'True'
 
     if not query:
         keyboard = xbmc.Keyboard('', 'Search', False)
@@ -320,7 +323,7 @@ def search(query=None, page='0', update_listing='False'):
     data = gb.query('search', { 'resources': 'video', 'query': query,
                                  'offset': page*100 })
     list_videos(data, page, { 'mode': 'search', 'query': query })
-    xbmcplugin.endOfDirectory(addon_id, updateListing=bool(update_listing))
+    xbmcplugin.endOfDirectory(addon_id, updateListing=update_listing)
 
 @handler.page
 def play_video(video_id):
