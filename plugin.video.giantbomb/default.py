@@ -155,7 +155,7 @@ def list_videos(data, page, gb_filter=None):
         page_total = len(data['results'])
         total_pages = (total + 99) / 100
 
-    page_menu = [
+    item_context = [
         (xbmc.getLocalizedString(13347), 'Action(Queue)')
     ]
     if total_pages > 1:
@@ -163,10 +163,11 @@ def list_videos(data, page, gb_filter=None):
             'mode': 'goto_page', 'gb_filter': gb_filter, 'current_page': page,
             'total_pages': total_pages
         })
-        page_menu.append((
-            'Go to page...', 'Container.Update({0}, replace)'.format(url)
-        ))
-    page_menu.append(('Toggle watched', 'Action(ToggleWatched)'))
+        page_context = [
+            ('Go to page...', 'Container.Update({0}, replace)'.format(url))
+        ]
+        item_context.extend(page_context)
+    item_context.append(('Toggle watched', 'Action(ToggleWatched)'))
 
     if page + 1 < total_pages:
         page_total += 1
@@ -178,6 +179,7 @@ def list_videos(data, page, gb_filter=None):
         ))
         li = xbmcgui.ListItem('Previous Page ({0})'.format(page),
                               iconImage='DefaultFolder.png')
+        li.addContextMenuItems(page_context)
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
                                     isFolder=True, totalItems=page_total)
@@ -209,13 +211,13 @@ def list_videos(data, page, gb_filter=None):
         li.setProperty('IsPlayable', 'true')
 
         if video.get('youtube_id'):
-            youtube_item = (
+            youtube_context = (
                 'Play with YouTube',
                 ('PlayMedia(plugin://plugin.video.youtube/?action=play_video' +
                  '&videoid={0})').format(video['youtube_id']))
-            li.addContextMenuItems([youtube_item] + page_menu)
+            li.addContextMenuItems([youtube_context] + item_context)
         else:
-            li.addContextMenuItems(page_menu)
+            li.addContextMenuItems(item_context)
 
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
@@ -228,6 +230,7 @@ def list_videos(data, page, gb_filter=None):
 
         li = xbmcgui.ListItem('Next Page ({0})'.format(page + 2),
                               iconImage='DefaultFolder.png')
+        li.addContextMenuItems(page_context)
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
                                     isFolder=True, totalItems=page_total)
@@ -235,12 +238,15 @@ def list_videos(data, page, gb_filter=None):
 @handler.page
 def goto_page(current_page, total_pages, gb_filter=None):
     dialog = xbmcgui.Dialog()
+    current_page = int(current_page)
+
     while True:
-        page = int(dialog.numeric(
-            0, 'Select Page (1 - {0})'.format(total_pages),
-            str(int(current_page) + 1)
-        )) - 1
-        if page >= 0 and page < total_pages:
+        page = dialog.numeric(0, 'Select Page (1 - {0})'.format(total_pages))
+        if not page:
+            page = int(current_page)
+            break
+        page = int(page) - 1
+        if page >= 0 and page < int(total_pages):
             break
 
     videos(gb_filter, page, update_listing=True)
