@@ -340,10 +340,6 @@ def play_video(video_id):
         quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
 
         video_url = video.get(quality, video['high_url'])
-        if quality == 'hd_url' and 'hd_url' in video:
-            # XXX: This assumes the URL already has a query string!
-            video_url += '&' + urllib.urlencode({ 'api_key': gb.api_key })
-
         li = xbmcgui.ListItem(path=video_url)
         xbmcplugin.setResolvedUrl(addon_id, True, li)
     except Exception as e:
