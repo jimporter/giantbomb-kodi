@@ -148,7 +148,8 @@ def list_videos(data, page, gb_filter=None):
     # Make sure this value is an int, since Giant Bomb currently returns this as
     # a string.
     total = int(data['number_of_total_results'])
-    if page == 'all':
+    page_is_all = page == 'all'
+    if page_is_all:
         page_total = total
         total_pages = 1
     else:
@@ -169,9 +170,9 @@ def list_videos(data, page, gb_filter=None):
         item_context.extend(page_context)
     item_context.append(('Toggle watched', 'Action(ToggleWatched)'))
 
-    if page + 1 < total_pages:
+    if not page_is_all and page + 1 < total_pages:
         page_total += 1
-    if page > 0:
+    if not page_is_all and page > 0:
         page_total += 1
 
         url = handler.build_url(dict(
@@ -223,7 +224,7 @@ def list_videos(data, page, gb_filter=None):
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
                                     totalItems=page_total)
 
-    if page + 1 < total_pages:
+    if not page_is_all and page + 1 < total_pages:
         url = handler.build_url(dict(
             page=page + 1, update_listing=True, **plugin_params
         ))
