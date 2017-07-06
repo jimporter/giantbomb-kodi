@@ -189,7 +189,7 @@ def list_videos(data, page, gb_filter=None):
         li.addContextMenuItems(page_context)
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
-                                    isFolder=True, totalItems=page_total)
+                                    isFolder=True, totalItems=items_this_page)
 
     for video in data['results']:
         name = video['name']
@@ -228,7 +228,7 @@ def list_videos(data, page, gb_filter=None):
 
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
-                                    totalItems=page_total)
+                                    totalItems=items_this_page)
 
     if show_next:
         url = handler.build_url(dict(
@@ -240,7 +240,7 @@ def list_videos(data, page, gb_filter=None):
         li.addContextMenuItems(page_context)
         li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
-                                    isFolder=True, totalItems=page_total)
+                                    isFolder=True, totalItems=items_this_page)
 
 @handler.page
 def goto_page(current_page, total_pages, gb_filter=None):
