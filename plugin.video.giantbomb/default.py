@@ -100,6 +100,20 @@ def list_categories():
     # for "Search".
     total = data['number_of_total_results'] + 2
 
+    live_data = gb.query('video/current-live')
+
+    if live_data['video'] != None:
+        total += 1
+        name = "LIVE: " + live_data['video']['title']
+        url = live_data['video']['stream']
+        thumb = "https://" + live_data['video']['image']
+        li = xbmcgui.ListItem(name, iconImage='DefaultVideo.png',
+                              thumbnailImage=thumb)
+        li.setProperty('IsPlayable', 'true')
+        li.setProperty('fanart_image', my_addon.getAddonInfo('fanart'))
+        xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
+                                    totalItems=total)
+
     # Add the "Latest" pseudo-category
     url = handler.build_url({ 'mode': 'videos' })
     li = xbmcgui.ListItem('Latest', iconImage='DefaultFolder.png')
