@@ -16,7 +16,7 @@ class TestGiantBombAPI(unittest.TestCase):
         self.assertEquals(data['number_of_page_results'], len(data['results']))
 
         for video_type in data['results']:
-            self.assertIsInstance(video_type['name'], str)
+            self.assertIsInstance(video_type['name'], unicode)
             self.assertIsInstance(video_type['id'], int)
 
     def test_videos(self):
@@ -30,11 +30,11 @@ class TestGiantBombAPI(unittest.TestCase):
             self.assertIsInstance(video['deck'], basestring)
             self.assertIsInstance(video['length_seconds'], int)
 
-            self.assertIsInstance(video['publish_date'], str)
+            self.assertIsInstance(video['publish_date'], unicode)
             time.strptime(video['publish_date'], '%Y-%m-%d %H:%M:%S')
 
-            self.assertIsInstance(video['image']['super_url'], str)
-            self.assertIsInstance(video['high_url'], str)
+            self.assertIsInstance(video['image']['super_url'], unicode)
+            self.assertIsInstance(video['high_url'], unicode)
 
     def test_latest(self):
         default = self.gb.query('videos')

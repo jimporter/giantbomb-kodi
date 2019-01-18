@@ -1,4 +1,4 @@
-import simplejson
+import json
 import urllib
 import urllib2
 
@@ -108,7 +108,7 @@ class GiantBomb(object):
         :param url: The URL to fetch
         :return: A dict with the response data from the API"""
 
-        data = simplejson.loads(urllib2.urlopen(url).read())
+        data = json.loads(urllib2.urlopen(url).read())
         status = data.get('status_code', 1)
 
         if status == 1:

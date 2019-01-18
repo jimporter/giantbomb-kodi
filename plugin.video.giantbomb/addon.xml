@@ -5,7 +5,6 @@
        provider-name="Jim">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
-    <import addon="script.module.simplejson" version="2.0.10"/>
     <import addon="plugin.video.youtube" version="4.4.6" optional="true"/>
   </requires>
   <extension point="xbmc.python.pluginsource"
