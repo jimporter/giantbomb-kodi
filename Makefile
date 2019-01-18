@@ -21,3 +21,7 @@ package:
 test:
 	PYTHONPATH=$(PWD)/$(ADDON_NAME):$(PYTHONPATH) \
 	python -m unittest discover test
+
+.PHONY: lint
+lint:
+	flake8

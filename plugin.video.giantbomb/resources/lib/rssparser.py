@@ -3,6 +3,7 @@ import xml.etree.ElementTree
 
 namespaces = { 'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd' }
 
+
 class RSSParser(object):
     """A simple class to parse RSS feeds."""
 
@@ -37,7 +38,7 @@ class RSSParser(object):
                 'link':   self._try_get_text(image, 'link'),
                 'width':  self._try_get_text(image, 'width'),
                 'height': self._try_get_text(image, 'height'),
-                }
+            }
 
     @property
     def items(self):
@@ -49,10 +50,11 @@ class RSSParser(object):
                 'description': self._try_get_text(item, 'description'),
                 'date':        self._try_get_text(item, 'pubDate'),
                 'author':      self._try_get_text(item, 'itunes:author'),
-                'image':       self._try_get_attr(item, 'itunes:image', 'href'),
+                'image':       self._try_get_attr(item, 'itunes:image',
+                                                  'href'),
                 'url':         self._try_get_attr(item, 'enclosure', 'url'),
                 'length':      self._try_get_attr(item, 'enclosure', 'length'),
-                }
+            }
 
     def _try_get_text(self, node, path, default=None):
         child = node.find(path, namespaces=namespaces)

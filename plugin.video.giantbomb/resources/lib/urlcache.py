@@ -2,6 +2,7 @@ import os
 import time
 import urllib
 
+
 def _trymakedirs(path, mode=0777):
     """Try to recursively create directories using os.makedirs. If the directory
     already exists, do nothing. This is equivalent to
@@ -14,6 +15,7 @@ def _trymakedirs(path, mode=0777):
     except OSError, e:
         if e.errno != 17 or not os.path.isdir(path):
             raise
+
 
 class URLCache(object):
     """A simple class to cache the contents of URLs by an arbitrary id."""
@@ -53,12 +55,12 @@ class URLCache(object):
 
         :param item: The item id.
         :param default: A value to return if the item isn't cached.
-        :return: The filename for the item; return `default` if the file doesn't
-                 exist."""
+        :return: The filename for the item; return `default` if the file
+                 doesn't exist."""
 
         try:
             return self[item]
-        except:
+        except Exception:
             return default
 
     def __setitem__(self, item, url):
@@ -69,8 +71,8 @@ class URLCache(object):
         :param url: The URL to cache."""
 
         path = os.path.join(self._basepath, item)
-        if ( not os.path.exists(path)
-             or os.path.getmtime(path) + self._expiry_secs < time.time() ):
+        if ( not os.path.exists(path) or
+             os.path.getmtime(path) + self._expiry_secs < time.time() ):
             _trymakedirs(self._basepath)
             urllib.urlretrieve(url, path)
 

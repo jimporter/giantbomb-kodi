@@ -7,7 +7,6 @@ import os.path
 import re
 import sys
 import time
-import urllib
 import xbmc
 import xbmcaddon
 import xbmcplugin
@@ -16,14 +15,17 @@ import xbmcgui
 addon_id = int(sys.argv[1])
 my_addon = xbmcaddon.Addon('plugin.video.giantbomb')
 
+
 def update_api_key(api_key):
     my_addon.setSetting('api_key', api_key)
+
 
 gb = GiantBomb(my_addon.getSetting('api_key') or None, update_api_key,
                my_addon.getSetting('use_https') == 'true')
 handler = RequestHandler(sys.argv[0])
 
 xbmcplugin.setPluginFanart(addon_id, my_addon.getAddonInfo('fanart'))
+
 
 @handler.page
 def link_account(first_run=False):
@@ -63,6 +65,7 @@ def link_account(first_run=False):
     # If we got here, we gave up trying to link the account.
     return False
 
+
 @handler.page
 def unlink_account():
     """Unlink this XBMC profile from the user's Giant Bomb account."""
@@ -73,6 +76,7 @@ def unlink_account():
                       yeslabel='Unlink', nolabel='Cancel')
     if ok:
         my_addon.setSetting('api_key', '')
+
 
 @handler.default_page
 def index(content_type='video'):
@@ -87,6 +91,7 @@ def index(content_type='video'):
     elif content_type == 'audio':
         list_podcasts()
 
+
 def list_categories():
     """Display the list of video categories from Giant Bomb."""
 
@@ -96,8 +101,8 @@ def list_categories():
         my_addon.setSetting('first_run', 'false')
 
     data = gb.query('video_types')
-    # Count up the total number of categories; add one for "Latest" and one more
-    # for "Search".
+    # Count up the total number of categories; add one for "Latest" and one
+    # more for "Search".
     total = data['number_of_total_results'] + 2
 
     live_data = gb.query('video/current-live')
@@ -146,6 +151,7 @@ def list_categories():
 
     xbmcplugin.endOfDirectory(addon_id)
 
+
 def list_videos(data, page, gb_filter=None):
     """Given a JSON response from Giant Bomb with a bunch of videos, add them to
     XBMC.
@@ -162,8 +168,8 @@ def list_videos(data, page, gb_filter=None):
     show_previous = False
     show_next = False
 
-    # Make sure this value is an int, since Giant Bomb currently returns this as
-    # a string.
+    # Make sure this value is an int, since Giant Bomb currently returns this
+    # as a string.
     total = int(data['number_of_total_results'])
     if page == 'all':
         items_this_page = total
@@ -178,7 +184,6 @@ def list_videos(data, page, gb_filter=None):
         if page + 1 < total_pages:
             items_this_page += 1
             show_next = True
-
 
     item_context = [
         (xbmc.getLocalizedString(13347), 'Action(Queue)')
@@ -256,6 +261,7 @@ def list_videos(data, page, gb_filter=None):
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li,
                                     isFolder=True, totalItems=items_this_page)
 
+
 @handler.page
 def goto_page(current_page, total_pages, gb_filter=None):
     dialog = xbmcgui.Dialog()
@@ -272,12 +278,13 @@ def goto_page(current_page, total_pages, gb_filter=None):
 
     videos(gb_filter, page, update_listing=True)
 
+
 @handler.page
 def videos(gb_filter=None, page='0', update_listing='False'):
     """List the videos satisfying some filter criteria.
 
-    :param gb_filter: A filter to send to the Giant Bomb API to filter the video
-                      results
+    :param gb_filter: A filter to send to the Giant Bomb API to filter the
+                      video results
     :param page: A 0-offset page number (as a string); or 'all' to show all
                  pages"""
 
@@ -306,6 +313,7 @@ def videos(gb_filter=None, page='0', update_listing='False'):
 
     xbmcplugin.endOfDirectory(addon_id, updateListing=update_listing)
 
+
 @handler.page
 def endurance(gb_filter):
     """Show the list of Endurance Runs.
@@ -326,6 +334,7 @@ def endurance(gb_filter):
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True)
     xbmcplugin.endOfDirectory(addon_id)
+
 
 @handler.page
 def search(query=None, page='0', update_listing='False'):
@@ -348,9 +357,10 @@ def search(query=None, page='0', update_listing='False'):
         return
 
     data = gb.query('search', { 'resources': 'video', 'query': query,
-                                 'offset': page*100 })
+                                'offset': page * 100 })
     list_videos(data, page, { 'mode': 'search', 'query': query })
     xbmcplugin.endOfDirectory(addon_id, updateListing=update_listing)
+
 
 @handler.page
 def play_video(video_id):
@@ -366,12 +376,14 @@ def play_video(video_id):
         quality_mapping = ['low_url', 'high_url', 'hd_url']
         quality = quality_mapping[ int(my_addon.getSetting('video_quality')) ]
 
-        video_url = video.get(quality, video['high_url']) + '?api_key=' + gb.api_key
+        video_url = (video.get(quality, video['high_url']) +
+                     '?api_key=' + gb.api_key)
         li = xbmcgui.ListItem(path=video_url)
         xbmcplugin.setResolvedUrl(addon_id, True, li)
-    except Exception as e:
+    except Exception:
         li = xbmcgui.ListItem()
         xbmcplugin.setResolvedUrl(addon_id, False, li)
+
 
 podcasts = [
     { 'id': 'bombcast',
@@ -396,19 +408,22 @@ podcasts = [
       'bombin-the-a-m-with-scoops-and-the-wolf/' },
 ]
 
+
 def list_podcasts():
     """Display the list of podcasts from Giant Bomb."""
 
-    cache = URLCache(os.path.join(
-            xbmc.translatePath(my_addon.getAddonInfo('profile')), 'images'))
+    cache = URLCache(os.path.join(xbmc.translatePath(
+        my_addon.getAddonInfo('profile')
+    ), 'images'))
     for cast in podcasts:
-        url = handler.build_url({ 'mode': 'podcast', 'podcast_id': cast['id'] })
+        url = handler.build_url({'mode': 'podcast', 'podcast_id': cast['id']})
         image = cache.get(cast['id'], '')
         li = xbmcgui.ListItem(cast['name'], thumbnailImage=image,
                               iconImage='DefaultFolder.png')
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url,
                                     listitem=li, isFolder=True)
     xbmcplugin.endOfDirectory(addon_id)
+
 
 @handler.page
 def podcast(podcast_id):
@@ -425,8 +440,9 @@ def podcast(podcast_id):
     # Save the podcast's image
     image = rss.image
     if image and 'url' in image:
-        cache = URLCache(os.path.join(
-                xbmc.translatePath(my_addon.getAddonInfo('profile')), 'images'))
+        cache = URLCache(os.path.join(xbmc.translatePath(
+            my_addon.getAddonInfo('profile')
+        ), 'images'))
         cache[podcast_id] = image['url']
 
     for item in rss.items:
@@ -450,6 +466,7 @@ def podcast(podcast_id):
         xbmcplugin.addDirectoryItem(handle=addon_id, url=url, listitem=li)
     xbmcplugin.endOfDirectory(addon_id)
 
+
 @handler.page
 def play_audio(url):
     """Start playing a particular audio file.
@@ -459,5 +476,6 @@ def play_audio(url):
     # XXX: This seems to fail sometimes and hang XBMC.
     li = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(addon_id, True, li)
+
 
 handler.run(sys.argv[2])

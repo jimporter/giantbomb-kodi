@@ -2,8 +2,8 @@ import resources.lib.giantbomb as giantbomb
 import time
 import unittest
 
-class TestGiantBombAPI(unittest.TestCase):
 
+class TestGiantBombAPI(unittest.TestCase):
     def setUp(self):
         self.gb = giantbomb.GiantBomb()
 

@@ -2,6 +2,7 @@ import re
 import urllib
 import urlparse
 
+
 class RequestHandler(object):
     """A simple handler for requests against this plugin. To register handlers,
     use the handler and default_handler decorators."""

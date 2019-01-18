@@ -2,6 +2,7 @@ import json
 import urllib
 import urllib2
 
+
 class APIError(Exception):
     """An error for when the Giant Bomb API doesn't like something we did."""
 
@@ -24,6 +25,7 @@ class APIError(Exception):
             status, 'Unknown Status Code {0}'.format(status)
         ))
         self.status = status
+
 
 class GiantBomb(object):
     """A simple interface to the Giant Bomb API."""
@@ -115,6 +117,7 @@ class GiantBomb(object):
             return data
         raise APIError(status)
 
+
 _realnames = {
     'alex':          'Alex Navarro',
     'brad':          'Brad Shoemaker',
@@ -132,6 +135,8 @@ _realnames = {
     'vinny':         'Vinny Caravella',
     'zacminor':      'Zac Minor',
 }
+
+
 def map_usernames(names):
     """Map the Giant Bomb crew's usernames to their real names.
 
