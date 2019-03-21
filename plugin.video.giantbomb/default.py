@@ -107,7 +107,7 @@ def list_categories():
 
     live_data = gb.query('video/current-live')
 
-    if live_data.get('video', None) is not None:
+    if live_data.get('video') is not None:
         total += 1
         name = "LIVE: " + live_data['video']['title']
         url = live_data['video']['stream']
